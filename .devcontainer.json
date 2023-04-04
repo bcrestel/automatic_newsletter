@@ -1,5 +1,5 @@
 {
-    "image": "pytorch4gpt:1.0",
+    "image": "automatic_newsletter:1.0",
     "customizations": {
         "vscode": {
             "extensions": ["microsoft.python"]
