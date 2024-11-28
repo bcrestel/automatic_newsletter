@@ -3,3 +3,7 @@ isort
 pytest
 pip-tools
 requests
+
+jupyterlab
+ipywidgets
+ipython
