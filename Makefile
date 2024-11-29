@@ -8,8 +8,7 @@ TEST_FOLDER = src/tests
 FORMAT_FOLDER = src
 DOCKER_RUN = docker run -it --entrypoint=bash -w /home -v $(PWD):/home/
 DOCKER_IMAGE = $(IMAGE_NAME):$(IMAGE_TAG)
-DOCKERFILE_PIPTOOLS = Dockerfile_piptools
-DOCKER_IMAGE_PIPTOOLS = piptools:1.0
+DOCKER_IMAGE_PIPTOOLS = piptools:latest # NOTE: this image should already exist
 ###################
 
 #
@@ -23,16 +22,11 @@ build: .build
 	docker build --rm -t $(DOCKER_IMAGE) .
 	@touch .build
 
-requirements.txt: .build_piptools requirements.in
+requirements.txt: requirements.in
 	$(info ***** Pinning requirements.txt *****)
 	$(DOCKER_RUN) $(DOCKER_IMAGE_PIPTOOLS) -c "pip-compile --output-file requirements.txt requirements.in"
 	#$(DOCKER_RUN) $(DOCKER_IMAGE_PIPTOOLS) -c "pip-compile --resolver=backtracking --output-file requirements.txt requirements.in" # adding this here just in case: resolver=backtracking was necessary to build another image once
 	@touch requirements.txt
-
-.build_piptools: Dockerfile_piptools
-	$(info ***** Building Image piptools:1.0 *****)
-	docker build --rm -f $(DOCKERFILE_PIPTOOLS) -t $(DOCKER_IMAGE_PIPTOOLS) .
-	@touch .build_piptools
 
 .PHONY : upgrade
 upgrade:
@@ -61,7 +55,7 @@ ipython: build
 .PHONY : notebook
 notebook: build
 	$(info ***** Starting a notebook *****)
-	$(DOCKER_RUN) -p 8888:8888 $(DOCKER_IMAGE) -c "jupyter lab --ip=$(hostname -I) --no-browser --allow-root"
+	$(DOCKER_RUN) -p 8888:8888 -p 8080:8080 $(DOCKER_IMAGE) -c "jupyter lab --ip=$(hostname -I) --no-browser --allow-root"
 
 .PHONY : notebook
 mlflow_server: build
