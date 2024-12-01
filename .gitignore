@@ -2,3 +2,4 @@
 .build_piptools
 .idea
 *.json
+*.txt
