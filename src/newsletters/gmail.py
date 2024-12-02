@@ -7,14 +7,10 @@ from bs4 import BeautifulSoup
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
-from src.utils.constants import SCOPES, TOKEN_PATH
+from config import SCOPES, TOKEN_PATH
 
 PATH_TO_ROOT = Path("../..")
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s - %(name)s - %(levelname)s -- l.%(lineno)d: %(message)s",
-)
 logger = logging.getLogger(__name__)
 
 
