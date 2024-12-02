@@ -1,10 +1,10 @@
 import logging
 from typing import List
 
-from gmail import Gmail
 from config import NEWSLETTER_AND_PARSER
-from news_story import NewsStory
+from gmail import Gmail
 
+from news_story import NewsStory
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -18,10 +18,14 @@ def runner(after: str, before: str) -> List[NewsStory]:
 
     # Fetch emails from the selected newsletters for the given range of dates
     all_senders = NEWSLETTER_AND_PARSER.keys()
-    emails = {_sender: gmail.fetch_emails(sender=_sender, after=after, before=before) for _sender in all_senders}
+    emails = {
+        _sender: gmail.fetch_emails(sender=_sender, after=after, before=before)
+        for _sender in all_senders
+    }
 
     # Extract the news stories from the emails
-    news_stories = [_parser(emails[_sender]) for _sender, _parser in NEWSLETTER_AND_PARSER.items()]
+    news_stories = [
+        _parser(emails[_sender]) for _sender, _parser in NEWSLETTER_AND_PARSER.items()
+    ]
 
     return news_stories
-

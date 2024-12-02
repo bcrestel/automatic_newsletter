@@ -4,10 +4,9 @@ from pathlib import Path
 from typing import List, TypedDict
 
 from bs4 import BeautifulSoup
+from config import SCOPES, TOKEN_PATH
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
-
-from config import SCOPES, TOKEN_PATH
 
 PATH_TO_ROOT = Path("../..")
 
