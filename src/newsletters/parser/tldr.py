@@ -1,7 +1,7 @@
 from typing import List
 
 from src.news_story import NewsStory
-from src.newsletters.gmail import Email
+from src.newsletters.email import Email
 
 
 def tldr_parser(Email) -> List[NewsStory]:

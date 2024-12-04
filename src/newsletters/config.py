@@ -1,5 +1,6 @@
-from parser.tldr import tldr_parser
 from pathlib import Path
+
+from src.newsletters.parser.tldr import tldr_parser
 
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 TOKEN_PATH = Path("secrets_vault/token.json")

@@ -2,23 +2,16 @@ import base64
 import logging
 from pathlib import Path
 from typing import List, TypedDict
-
 from bs4 import BeautifulSoup
-from config import SCOPES, TOKEN_PATH
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
+
+from src.newsletters.config import SCOPES, TOKEN_PATH
+from src.newsletters.email import Email
 
 PATH_TO_ROOT = Path("../..")
 
 logger = logging.getLogger(__name__)
-
-
-class Email(TypedDict):
-    sender: str
-    subject: str
-    date_utc: str
-    id: str
-    text: str
 
 
 class Gmail:
