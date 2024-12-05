@@ -1,9 +1,9 @@
 import logging
 from typing import List
 
+from src.news_story import NewsStory
 from src.newsletters.config import NEWSLETTER_AND_PARSER
 from src.newsletters.gmail import Gmail
-from src.news_story import NewsStory
 
 logging.basicConfig(
     level=logging.DEBUG,

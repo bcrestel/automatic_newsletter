@@ -2,6 +2,7 @@ import base64
 import logging
 from pathlib import Path
 from typing import List, TypedDict
+
 from bs4 import BeautifulSoup
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
