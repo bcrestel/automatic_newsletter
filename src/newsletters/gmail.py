@@ -23,6 +23,7 @@ class Gmail:
     def fetch_emails(
         self, sender: str, after: str = "1900/12/31", before: str = "2100/12/31"
     ) -> List[Email]:
+        logger.debug(f"Fetch email for sender {sender} from {after} until {before}.")
         query = f"after:{after} before:{before} from:{sender}"
         results = self.service.users().messages().list(userId="me", q=query).execute()
         messages = results.get("messages", [])

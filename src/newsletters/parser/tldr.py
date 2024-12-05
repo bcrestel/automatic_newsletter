@@ -1,14 +1,19 @@
+import logging
 import re
 from typing import List
 
 from src.news_story import NewsStory
 from src.newsletters.email import Email
 
+logger = logging.getLogger(__name__)
+
+
 SPLIT_PATTERN = "\r\n\r\n"
 TITLE_PATTERN = r"READ\)[\s\r\n]*\[\d+\]"
 
 
 def tldr_parser(email: Email) -> List[NewsStory]:
+    logger.debug(f"Parsing email: {email['subject']}")
     list_text = email["text"].split(SPLIT_PATTERN)
     news_stories = []
     ii = 0

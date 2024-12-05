@@ -6,7 +6,7 @@ from src.newsletters.config import NEWSLETTER_AND_PARSER
 from src.newsletters.gmail import Gmail
 
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s -- l.%(lineno)d: %(message)s",
 )
 logger = logging.getLogger(__name__)
@@ -16,15 +16,24 @@ def runner(after: str, before: str) -> List[NewsStory]:
     gmail = Gmail()
 
     # Fetch emails from the selected newsletters for the given range of dates
+    logger.info("Query emails")
     all_senders = NEWSLETTER_AND_PARSER.keys()
     emails = {
         _sender: gmail.fetch_emails(sender=_sender, after=after, before=before)
         for _sender in all_senders
     }
+    logger.info(f"Using {len(emails.keys())} sender(s): {emails.keys()}.")
+    for key, value in emails.items():
+        logger.debug(f"Found {len(value)} emails from sender {key}")
 
     # Extract the news stories from the emails
+    logger.info("Parsing emails to extract news stories")
     news_stories = [
-        _parser(emails[_sender]) for _sender, _parser in NEWSLETTER_AND_PARSER.items()
+        NEWSLETTER_AND_PARSER[_sender](email)
+        for _sender, list_emails in emails.items()
+        for email in list_emails
     ]
+    news_stories = [new_story for n_s in news_stories for new_story in n_s]
+    logger.info(f"Newsletters block complete. Found {len(news_stories)} news stories.")
 
     return news_stories
