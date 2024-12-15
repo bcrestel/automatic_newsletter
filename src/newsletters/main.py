@@ -1,9 +1,17 @@
 import logging
+from pathlib import Path
 from typing import List
 
 from src.news_story import NewsStory
-from src.newsletters.config import NEWSLETTER_AND_PARSER
+from src.newsletters.config import (
+    CREDENTIAL_PATH,
+    NEWSLETTER_AND_PARSER,
+    SCOPES,
+    TOKEN_PATH,
+)
 from src.newsletters.gmail import Gmail
+
+PATH_TO_ROOT = Path("../..")
 
 logging.basicConfig(
     level=logging.INFO,
@@ -13,7 +21,11 @@ logger = logging.getLogger(__name__)
 
 
 def runner(after: str, before: str) -> List[NewsStory]:
-    gmail = Gmail()
+    gmail = Gmail(
+        path_to_token=PATH_TO_ROOT / TOKEN_PATH,
+        path_to_credentials=PATH_TO_ROOT / CREDENTIAL_PATH,
+        scopes=SCOPES,
+    )
 
     # Fetch emails from the selected newsletters for the given range of dates
     logger.info("Query emails")

@@ -15,13 +15,15 @@ def print_dataframe_col_per_alphanumeric(df: pd.DataFrame, column: str):
         print(f"{first_char} ({len(entries)}): {', '.join(entries)}")
 
 
-def convert_list_of_dict_to_dataframe(list_of_dict: List[dict], dict_keys: List) -> pd.DataFrame:
+def convert_list_of_dict_to_dataframe(
+    list_of_dict: List[dict], dict_keys: List
+) -> pd.DataFrame:
     list_results = [[] for _ in range(len(dict_keys))]
     for ns in list_of_dict:
         for idx, key in enumerate(dict_keys):
             try:
                 res = ns[key]
             except KeyError as e:
-                res = ''
+                res = ""
             list_results[idx].append(res)
     return pd.DataFrame({key: list_results[idx] for idx, key in enumerate(dict_keys)})
