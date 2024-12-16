@@ -1,7 +1,5 @@
 import base64
 import logging
-import os
-import shutil
 from pathlib import Path
 from typing import List
 
@@ -23,13 +21,11 @@ class Gmail:
         self.path_to_token = path_to_token
         self.path_to_credentials = path_to_credentials
         self.scopes = scopes
-        self.service = self.create_services(
-            path_to_token=self.path_to_token, scopes=self.scopes
-        )
+        self.service = self.create_services()
 
-    def create_services(self, path_to_token: str, scopes: str):
+    def create_services(self):
         creds = Credentials.from_authorized_user_file(
-            filename=path_to_token, scopes=scopes
+            filename=self.path_to_token, scopes=self.scopes
         )
         return build("gmail", "v1", credentials=creds)
 
@@ -49,9 +45,7 @@ class Gmail:
                 path_to_credentials=self.path_to_credentials,
                 scopes=self.scopes,
             )
-            self.service = self.create_services(
-                path_to_token=self.path_to_token, scopes=self.scopes
-            )
+            self.service = self.create_services()
             results = (
                 self.service.users().messages().list(userId="me", q=query).execute()
             )
