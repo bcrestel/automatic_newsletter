@@ -1,3 +1,4 @@
+import logging
 from typing import List
 
 import pandas as pd
@@ -8,15 +9,23 @@ from src.scoring.config import PATH_TO_ROOT
 from src.scoring.google_sheets import GoogleSheets
 from src.utils.pandas import convert_list_of_dict_to_dataframe
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s -- l.%(lineno)d: %(message)s",
+)
+logger = logging.getLogger(__name__)
+
 
 def runner(list_news_stories: List[dict]) -> pd.DataFrame:
     # Convert the news stories to a dataframe
+    logger.info(f"Converting all news stories to a dataframe.")
     news_stories_keys = NewsStory.__annotations__.keys()
     df_news_stories = convert_list_of_dict_to_dataframe(
         list_news_stories, news_stories_keys
     )
 
     # Load the target fields
+    logger.info(f"Querying the metadata tags from Google Sheets.")
     sheets = GoogleSheets(
         path_to_token=PATH_TO_ROOT / TOKEN_PATH,
         path_to_credentials=PATH_TO_ROOT / CREDENTIAL_PATH,

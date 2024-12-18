@@ -6,6 +6,7 @@ from src.config import CREDENTIAL_PATH, SCOPES, TOKEN_PATH
 from src.news_story import NewsStory
 from src.newsletters.config import NEWSLETTER_AND_PARSER, PATH_TO_ROOT
 from src.newsletters.gmail import Gmail
+from src.utils.list import flatten_list_of_lists
 
 logging.basicConfig(
     level=logging.INFO,
@@ -39,8 +40,7 @@ def runner(after: str, before: str) -> List[NewsStory]:
         for _sender, list_emails in emails.items()
         for email in list_emails
     ]
-    # Convert the list of list to a single list:
-    news_stories = [new_story for n_s in news_stories for new_story in n_s]
+    news_stories = flatten_list_of_lists(news_stories)
     logger.info(f"Newsletters block complete. Found {len(news_stories)} news stories.")
 
     return news_stories

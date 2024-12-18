@@ -36,7 +36,7 @@ def tldr_parser(email: Email) -> List[NewsStory]:
             news_stories.append(
                 NewsStory(
                     title=title,
-                    url=ref.strip()[:-1], # ref nb for the url
+                    url=ref.strip()[:-1],  # ref nb for the url
                     source_of_the_news=email["sender"],
                     news_summary=summary,
                     date_source=email["date_utc"],

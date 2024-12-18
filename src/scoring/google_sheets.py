@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -6,6 +7,9 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
 from src.scoring.config import PATH_TO_ROOT, PATH_TO_SPREADSHEET_ID, SPREADSHEET_TABS
+from src.utils.list import flatten_list_of_lists
+
+logger = logging.getLogger(__name__)
 
 
 class GoogleSheets:
@@ -25,7 +29,7 @@ class GoogleSheets:
         )
         return build("sheets", "v4", credentials=creds)
 
-    def get_all_tables(self) -> Dict[str, pd.DataFrame]:
+    def get_all_tables(self) -> Dict[str, Dict[str, str]]:
         tables = {}
         for tab in SPREADSHEET_TABS:
             table = self.get_table(tab=tab)
@@ -33,7 +37,7 @@ class GoogleSheets:
             tables[tab] = table
         return tables
 
-    def get_table(self, tab: str) -> pd.DataFrame:
+    def get_table(self, tab: str) -> Dict[str, str]:
         spreadsheet = self.service.spreadsheets()
         result = (
             spreadsheet.values()
@@ -41,20 +45,12 @@ class GoogleSheets:
             .execute()
         )
         values = result.get("values", [])
-        return pd.DataFrame(values[1:], columns=values[0])
+        values = values[1:]  # ignore the header
+        res_dict = {val[0]: val[1:] for val in values}
+        return res_dict
 
-    def verify_table(self, tab: str, table: pd.DataFrame) -> None:
-        if tab == "personalities":
-            max_count = (
-                table.apply(lambda x: (" ").join(x), axis=1).value_counts().max().item()
-            )
-        else:
-            target_col = [col for col in table.columns if col.startswith("col")]
-            max_count = (
-                pd.Series(table[target_col].values.flatten())
-                .value_counts(dropna=True)
-                .max()
-                .item()
-            )
-        if max_count != 1:
-            raise ValueError(f"Non unique entries in table {tab}")
+    def verify_table(self, tab: str, table: Dict[str, str]) -> None:
+        flat_list = flatten_list_of_lists(list(table.values()))
+        if len(flat_list) != len(set(flat_list)):
+            logger.error(f"Non unique entries in table {tab}")
+            raise ValueError()

@@ -3,6 +3,9 @@ FROM piptools:latest
 ADD requirements.txt ./
 RUN pip install -r requirements.txt
 
+# Download spacy's trained pipeline for english
+RUN python -m spacy download en_core_web_sm
+
 # Add jupyterlab extensions
 RUN pip install jupyterlab_execute_time
 
