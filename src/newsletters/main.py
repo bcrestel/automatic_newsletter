@@ -39,6 +39,7 @@ def runner(after: str, before: str) -> List[NewsStory]:
         for _sender, list_emails in emails.items()
         for email in list_emails
     ]
+    # Convert the list of list to a single list:
     news_stories = [new_story for n_s in news_stories for new_story in n_s]
     logger.info(f"Newsletters block complete. Found {len(news_stories)} news stories.")
 

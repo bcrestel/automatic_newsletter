@@ -3,6 +3,7 @@ isort
 pytest
 pip-tools
 requests
+furl
 
 jupyterlab
 ipywidgets
