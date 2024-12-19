@@ -8,6 +8,7 @@ from src.news_story import NewsStory
 from src.scoring.config import PATH_TO_ROOT
 from src.scoring.google_sheets import GoogleSheets
 from src.utils.pandas import convert_list_of_dict_to_dataframe
+from src.scoring.structured_news_stories import StructuredNewsStories
 
 logging.basicConfig(
     level=logging.INFO,
@@ -16,13 +17,10 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def runner(list_news_stories: List[dict]) -> pd.DataFrame:
+def runner(list_news_stories: List[NewsStory]) -> pd.DataFrame:
     # Convert the news stories to a dataframe
-    logger.info(f"Converting all news stories to a dataframe.")
-    news_stories_keys = NewsStory.__annotations__.keys()
-    df_news_stories = convert_list_of_dict_to_dataframe(
-        list_news_stories, news_stories_keys
-    )
+    logger.info(f"Converting all news stories to a structured format.")
+    struc_newsstories = StructuredNewsStories(list_news_stories=list_news_stories)
 
     # Load the target fields
     logger.info(f"Querying the metadata tags from Google Sheets.")
@@ -35,4 +33,4 @@ def runner(list_news_stories: List[dict]) -> pd.DataFrame:
 
     # TODO: Add metadata to df_news_stories according to target_fields
 
-    return df_news_stories, target_fields
+    return struc_newsstories, target_fields

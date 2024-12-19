@@ -29,7 +29,7 @@ class GoogleSheets:
         )
         return build("sheets", "v4", credentials=creds)
 
-    def get_all_tables(self) -> Dict[str, Dict[str, str]]:
+    def get_all_tables(self) -> Dict[str, Dict[str, List[str]]]:
         tables = {}
         for tab in SPREADSHEET_TABS:
             table = self.get_table(tab=tab)
@@ -37,7 +37,7 @@ class GoogleSheets:
             tables[tab] = table
         return tables
 
-    def get_table(self, tab: str) -> Dict[str, str]:
+    def get_table(self, tab: str) -> Dict[str, List[str]]:
         spreadsheet = self.service.spreadsheets()
         result = (
             spreadsheet.values()
