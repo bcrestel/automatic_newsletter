@@ -120,6 +120,8 @@ idna==3.10
     #   httpx
     #   jsonschema
     #   requests
+inflect==7.4.0
+    # via -r requirements.in
 iniconfig==2.0.0
     # via pytest
 ipykernel==6.29.5
@@ -209,6 +211,8 @@ mdurl==0.1.2
     # via markdown-it-py
 mistune==3.0.2
     # via nbconvert
+more-itertools==10.5.0
+    # via inflect
 murmurhash==1.0.11
     # via
     #   preshed
@@ -434,6 +438,8 @@ traitlets==5.14.3
     #   nbclient
     #   nbconvert
     #   nbformat
+typeguard==4.4.1
+    # via inflect
 typer==0.15.1
     # via
     #   spacy
@@ -445,6 +451,7 @@ typing-extensions==4.12.2
     #   ipython
     #   pydantic
     #   pydantic-core
+    #   typeguard
     #   typer
 tzdata==2024.2
     # via pandas

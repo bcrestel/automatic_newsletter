@@ -7,8 +7,8 @@ from src.config import CREDENTIAL_PATH, SCOPES, TOKEN_PATH
 from src.news_story import NewsStory
 from src.scoring.config import PATH_TO_ROOT
 from src.scoring.google_sheets import GoogleSheets
-from src.utils.pandas import convert_list_of_dict_to_dataframe
 from src.scoring.structured_news_stories import StructuredNewsStories
+from src.utils.pandas import convert_list_of_dict_to_dataframe
 
 logging.basicConfig(
     level=logging.INFO,
