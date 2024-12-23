@@ -31,6 +31,7 @@ def runner(list_news_stories: List[NewsStory]) -> pd.DataFrame:
     )
     target_fields = sheets.get_all_tables()
 
-    # TODO: Add metadata to df_news_stories according to target_fields
+    # Add metadata and calculate the score
+    struc_newsstories.add_all_metadata_and_score(all_target_fields=target_fields)
 
-    return struc_newsstories, target_fields
+    return struc_newsstories.df_news_stories

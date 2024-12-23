@@ -13,7 +13,6 @@ SPLIT_PATTERN = "\r\n\r\n"
 TITLE_PATTERN = r"READ\)[\s\r\n]*\[\d+\]"
 
 
-# TODO: get full text for each NewsStory
 # TODO: Profile that function and speed it up
 def tldr_parser(email: Email) -> List[NewsStory]:
     """Parser for the TLDR newsletter
