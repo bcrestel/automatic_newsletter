@@ -299,6 +299,8 @@ ptyprocess==0.7.0
     #   terminado
 pure-eval==0.2.3
     # via stack-data
+pyarrow==18.1.0
+    # via -r requirements.in
 pyasn1==0.6.1
     # via
     #   pyasn1-modules
