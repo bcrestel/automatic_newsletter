@@ -9,6 +9,8 @@ from src.news_story import NewsStory
 from src.scoring.config import SPREADSHEET_TABS_TO_ATTR
 from src.utils.pandas import convert_list_of_dict_to_dataframe
 
+SCORE_COL = "score"
+
 logger = logging.getLogger(__name__)
 
 
@@ -76,6 +78,12 @@ class StructuredNewsStories:
 
     def calculate_score(self):
         score = 0
+        score_themes = 0
         for col in self.score_col:
-            score += self.df_news_stories[col].apply(lambda x: len(x))
-        self.df_news_stories["score"] = score
+            score_col = self.df_news_stories[col].apply(lambda x: len(x))
+            logger.debug(f"col={col}, score_col={score_col}")
+            if col == "themes":
+                score_themes = score_col
+            score += score_col
+        themes_penalty = (score_themes > 0).astype(int)
+        self.df_news_stories[SCORE_COL] = score * themes_penalty
