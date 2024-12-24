@@ -9,7 +9,6 @@ PATH_TO_FILE = "'../../secrets_vault/scored_news_stories.parquet'"
 def runner(
     df_scored_news_stories_new: pd.DataFrame, path_to_file: str = PATH_TO_FILE
 ) -> None:
-    # Don't overwrite. Load, append, save
     try:
         df_scored_news_stories_existing = pd.read_parquet(path_to_file)
         df_scored_news_stories = pd.concat(
