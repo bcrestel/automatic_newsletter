@@ -16,7 +16,21 @@ class Categories(Enum):
     EVALUATION = "Evaluation"
 
 
+SEPARATOR_LONG = "=" * 60 + "\n"
+SEPARATOR_SHORT = "=" * 20 + "\n"
+
+themes_to_exclude = set(["AI&GenAI", "Model", "Funding", "Evaluation"])
+
+COL_TAGS = [
+    "competitive_intelligence",
+    "themes",
+    "market_intelligence",
+    "personalities",
+]
+
+
 class Report:
+    # TODO: Add logging
     def __init__(self, df_scored_news_stories: pd.DataFrame, target_fields: Dict):
         """Build a report from scored news stories
 
@@ -56,6 +70,7 @@ class Report:
 
         Returns:
             Dict[str, pd.DataFrame]: selected news stories from self.df_ns for each section of the report
+                sections are "competitive_intelligence", "themes", "funding", "evaluation"
         """
         # Validate input arguments
         if not (0 < min_pct_entries < 1.0):
@@ -66,18 +81,18 @@ class Report:
         df_nonzero = self.df_ns[self.df_ns[SCORE_COL] > 0]
         news_stories_for_report = {}
         # section: competitive intelligence
-        news_stories_for_report["competitive_intelligence"] = df_nonzero[
+        news_stories_for_report[Categories.COMPETTIVE_INTELLIGENCE.name] = df_nonzero[
             df_nonzero[Categories.COMPETTIVE_INTELLIGENCE.value].apply(lambda x: len(x))
             > 0
         ]
         # section: funding
-        news_stories_for_report["funding"] = df_nonzero[
+        news_stories_for_report[Categories.FUNDING.name] = df_nonzero[
             df_nonzero[Categories.THEMES.value].apply(
                 lambda x: Categories.FUNDING.value in x
             )
         ]
         # section: evaluation
-        news_stories_for_report["evaluation"] = df_nonzero[
+        news_stories_for_report[Categories.EVALUATION.name] = df_nonzero[
             df_nonzero[Categories.THEMES.value].apply(
                 lambda x: Categories.EVALUATION.value in x
             )
@@ -105,12 +120,58 @@ class Report:
             min_score = score_min_entries
         else:
             min_score = min_score_threshold
-        news_stories_for_report["themes"] = df_sorted_news_stories[
+        news_stories_for_report[Categories.THEMES.name] = df_sorted_news_stories[
             df_sorted_news_stories[SCORE_COL] >= min_score
         ]
         return news_stories_for_report
 
-    def format_report(self, news_stories_for_report: Dict[str, pd.DataFrame]) -> None:
-        # TODO: format each section of the report (sections = news_stories_for_report.keys())
-        # TODO: test using an LLM to create the content for each section
-        raise NotImplementedError
+    def create_report(self, news_stories_for_report: Dict[str, pd.DataFrame]) -> str:
+        next_line = "\n\n" + SEPARATOR_LONG + "\n\n"
+        # Competitive intelligence
+        ns = news_stories_for_report[Categories.COMPETTIVE_INTELLIGENCE.name]
+        report = "# Competitive Intelligence\n" + self._format_section(ns)
+        report += next_line
+        # Evaluation
+        ns = news_stories_for_report[Categories.EVALUATION.name]
+        report += "# Evaluation\n" + self._format_section(ns)
+        report += next_line
+        # Funding
+        ns = news_stories_for_report[Categories.FUNDING.name]
+        report += "# Funding\n" + self._format_section(ns)
+        report += next_line
+        # Various Themes
+        report += "# Themes\n"
+        df_exploded = news_stories_for_report[Categories.THEMES.name][
+            Categories.THEMES.value
+        ].explode()
+        all_themes = set(df_exploded)
+        themes_to_include = list(all_themes - themes_to_exclude)
+        for theme in themes_to_include:
+            _df = news_stories_for_report[Categories.THEMES.name].loc[
+                df_exploded[df_exploded.str.contains(theme)].index
+            ]
+            report += f"\n## {theme}\n" + self._format_section(_df)
+        idx_included = set(df_exploded[df_exploded.isin(themes_to_include)].index)
+        # TODO: Add indexes from previous categories (Funding, Evaluation, Competitive Intelligence)
+        idx_left = list(
+            set(news_stories_for_report[Categories.THEMES.name].index) - idx_included
+        )
+        df_left = news_stories_for_report[Categories.THEMES.name].loc[idx_left]
+        report += "\n## The rest\n" + self._format_section(df_left)
+        # TODO: Add articles that were not selected, ranked according to their score
+        return report
+
+    def _format_section(self, news_stories: pd.DataFrame) -> str:
+        if len(news_stories) == 0:
+            return "Nothing to see here!"
+        else:
+            out = ""
+            for idx in news_stories.index:
+                ns = news_stories.loc[idx]
+                tags = ns[COL_TAGS].sum()
+                out += (
+                    f"\u2022 {ns['title']} ({ns['url']}):\n"
+                    + f"\tScore: {ns['score']} (tags: {tags})\n"
+                    + f"\tSummary: {ns['news_summary']}\n"
+                )
+            return out
