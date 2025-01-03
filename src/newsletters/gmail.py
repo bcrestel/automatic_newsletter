@@ -1,5 +1,7 @@
 import base64
 import logging
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from pathlib import Path
 from typing import List
 
@@ -7,6 +9,7 @@ from bs4 import BeautifulSoup
 from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 
 from src.newsletters.email import Email
 from src.utils.google import recreate_token
@@ -21,9 +24,9 @@ class Gmail:
         self.path_to_token = path_to_token
         self.path_to_credentials = path_to_credentials
         self.scopes = scopes
-        self.service = self.create_services()
+        self.service = self._create_services()
 
-    def create_services(self):
+    def _create_services(self):
         creds = Credentials.from_authorized_user_file(
             filename=self.path_to_token, scopes=self.scopes
         )
@@ -45,17 +48,17 @@ class Gmail:
                 path_to_credentials=self.path_to_credentials,
                 scopes=self.scopes,
             )
-            self.service = self.create_services()
+            self.service = self._create_services()
             results = (
                 self.service.users().messages().list(userId="me", q=query).execute()
             )
         messages = results.get("messages", [])
         emails = [
-            self.create_email_from_message(message=message) for message in messages
+            self._create_email_from_message(message=message) for message in messages
         ]
         return [email for email in emails if email["sender"] == sender]
 
-    def create_email_from_message(self, message: dict) -> Email:
+    def _create_email_from_message(self, message: dict) -> Email:
         email_id = message["id"]
         message = (
             self.service.users().messages().get(userId="me", id=email_id).execute()
@@ -72,10 +75,10 @@ class Gmail:
                 header["value"] for header in headers if header["name"] == "Date"
             ),
             id=email_id,
-            text=self.get_text_from_message(message=message),
+            text=self._get_text_from_message(message=message),
         )
 
-    def get_text_from_message(self, message: dict) -> str:
+    def _get_text_from_message(self, message: dict) -> str:
         mimeType = message["payload"]["mimeType"]
         if mimeType == "multipart/alternative":
             # for a multipart email, look for the plain text part
@@ -103,6 +106,33 @@ class Gmail:
             )
             email_id = message["id"]
             logger.error(
-                f"email {email_id}, from: {sender}, with subject: {subject}, sent on {date_utc} has mimeType: {mimeType}"
+                f"email {email_id}, from: {sender}, with subject: "
+                + f"{subject}, sent on {date_utc} has mimeType: {mimeType}"
             )
             raise NotImplementedError
+
+    def send_email(self, sender: str, recipient: str, subject: str, body: str) -> None:
+        # Create the message
+        message = MIMEMultipart()
+        message["to"] = recipient
+        message["from"] = sender
+        message["subject"] = subject
+
+        # Attach the body as text
+        msg = MIMEText(body)
+        message.attach(msg)
+
+        # Encode the message to base64
+        raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+
+        # Send the email
+        try:
+            message = (
+                self.service.users()
+                .messages()
+                .send(userId="me", body={"raw": raw_message})
+                .execute()
+            )
+            logger.info(f'Message {subject} sent; message ID: {message["id"]}')
+        except HttpError as error:
+            logger.error(f"An error occurred: {error}")
