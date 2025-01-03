@@ -6,3 +6,4 @@
 __pycache__
 secrets_vault/*
 *.parquet
+.Trash-*

@@ -3,9 +3,9 @@ from pathlib import Path
 from typing import List
 
 from src.config import CREDENTIAL_PATH, SCOPES, TOKEN_PATH
+from src.gmail import Gmail
 from src.news_story import NewsStory
 from src.newsletters.config import NEWSLETTER_AND_PARSER, PATH_TO_ROOT
-from src.newsletters.gmail import Gmail
 from src.utils.list import flatten_list_of_lists
 
 logger = logging.getLogger(__name__)
