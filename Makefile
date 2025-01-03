@@ -6,7 +6,7 @@ IMAGE_TAG = 1.0
 # FIXED PARAMETERS
 TEST_FOLDER = src/tests
 FORMAT_FOLDER = src
-DOCKER_RUN = docker run -it --entrypoint=bash -w /home -v $(PWD):/home/
+DOCKER_RUN = docker run -it --entrypoint=bash -e TZ=America/New_York -w /home -v $(PWD):/home/
 DOCKER_IMAGE = $(IMAGE_NAME):$(IMAGE_TAG)
 DOCKER_IMAGE_PIPTOOLS = piptools:latest # NOTE: this image should already exist
 ###################
