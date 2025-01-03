@@ -10,10 +10,6 @@ from src.scoring.google_sheets import GoogleSheets
 from src.scoring.structured_news_stories import StructuredNewsStories
 from src.utils.pandas import convert_list_of_dict_to_dataframe
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s -- l.%(lineno)d: %(message)s",
-)
 logger = logging.getLogger(__name__)
 
 

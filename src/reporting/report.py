@@ -7,6 +7,7 @@ from typing import Dict, List, Optional
 import pandas as pd
 
 from src.scoring.structured_news_stories import SCORE_COL
+from src.utils.io.text import save_to_text
 from src.utils.list import flatten_list_of_lists
 
 logger = logging.getLogger(__name__)
@@ -69,18 +70,21 @@ class Report:
         news_stories_for_report = self._filtered_news_stories(**_params)
         self._log_df(
             news_stories_for_report=news_stories_for_report,
-            path_to_log=self.get_path_to_report_log(),
+            path_to_log=self.get_path_to_report_log(extension="parquet"),
         )
         report_str = self._create_report_from_news_stories(
             news_stories_for_report=news_stories_for_report
         )
+        report_path = self.get_path_to_report_log(extension="txt")
+        save_to_text(file_path=report_path, content=report_str)
+        logger.info(f"Report saved in text format to {report_path}")
         return report_str
 
-    def get_path_to_report_log(self, path_folder: str = "log/") -> str:
+    def get_path_to_report_log(self, extension: str, path_folder: str = "log/") -> str:
         now = datetime.today()
         formatted_now = now.strftime("%Y%m%d%H%M%S")
         file_name = Path(
-            f"log_report_{self.start_date}_{self.end_date}_{formatted_now}.parquet"
+            f"log_report_{self.start_date}_{self.end_date}_{formatted_now}.{extension}"
         )
         path_to_report_log = Path(path_folder)
         path_to_report_log.mkdir(parents=True, exist_ok=True)
@@ -100,7 +104,11 @@ class Report:
                 raise KeyError(f"Missing tab {cat} in the Google Sheets")
 
     def _filtered_news_stories(
-        self, min_score_threshold: float, min_nb_entries: int, min_pct_entries: float, top_k: int = 3
+        self,
+        min_score_threshold: float,
+        min_nb_entries: int,
+        min_pct_entries: float,
+        top_k: int = 3,
     ) -> Dict[str, pd.DataFrame]:
         """Select relevant news stories from self.df_ns for the report
 
@@ -158,10 +166,13 @@ class Report:
     ) -> None:
         # Add "included_in_report" column in self.df_ns
         selected_indices = self._get_idx_from_dict_of_df(news_stories_for_report)
-        logger.debug(f"Tagged {len(selected_indices)} news stories in df_ns as included in the report.")
+        logger.debug(
+            f"Tagged {len(selected_indices)} news stories in df_ns as included in the report."
+        )
         self.df_ns[COLUMN_INCLUDED_IN_REPORT] = False
         self.df_ns.loc[selected_indices, COLUMN_INCLUDED_IN_REPORT] = True
         self.df_ns.to_parquet(path=path_to_log)
+        logger.info(f"df_ns saved to {path_to_log}")
 
     def _create_report_from_news_stories(
         self, news_stories_for_report: Dict[str, pd.DataFrame]

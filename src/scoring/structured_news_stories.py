@@ -16,9 +16,8 @@ logger = logging.getLogger(__name__)
 
 class StructuredNewsStories:
     def __init__(self, list_news_stories: List[NewsStory]):
-        news_stories_keys = NewsStory.__annotations__.keys()
-        self.df_news_stories: pd.DataFrame = convert_list_of_dict_to_dataframe(
-            list_news_stories, news_stories_keys
+        self.df_news_stories = self._create_df_from_news_stories(
+            list_news_stories=list_news_stories
         )
         self._tmp_col = "metadata_txt"
         self.nlp = spacy.load("en_core_web_sm")
@@ -55,6 +54,16 @@ class StructuredNewsStories:
         self.df_news_stories[category] = pd.Series(list(zip(*all_tags))).apply(
             lambda x: [item for item in x if item]
         )
+
+    def _create_df_from_news_stories(
+        self, list_news_stories: List[NewsStory]
+    ) -> pd.DataFrame:
+        news_stories_keys = NewsStory.__annotations__.keys()
+        df_news_stories = convert_list_of_dict_to_dataframe(
+            list_news_stories, news_stories_keys
+        )
+        df_news_stories["date_source"] = pd.to_datetime(df_news_stories["date_source"])
+        return df_news_stories
 
     def _create_tmp_col(self):
         tmp_series = (

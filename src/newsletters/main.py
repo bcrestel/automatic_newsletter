@@ -8,10 +8,6 @@ from src.newsletters.config import NEWSLETTER_AND_PARSER, PATH_TO_ROOT
 from src.newsletters.gmail import Gmail
 from src.utils.list import flatten_list_of_lists
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s -- l.%(lineno)d: %(message)s",
-)
 logger = logging.getLogger(__name__)
 
 
