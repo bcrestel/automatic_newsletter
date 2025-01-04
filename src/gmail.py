@@ -35,6 +35,17 @@ class Gmail:
     def fetch_emails(
         self, sender: str, after: str = "1900/12/31", before: str = "2100/12/31"
     ) -> List[Email]:
+        """Fetch emails from the gmail server
+
+        Args:
+            sender (str): fetch emails for that sender only
+            after (str, optional): Starting date of the range of emails (inclusive). Defaults to "1900/12/31".
+            before (str, optional): Ending date of the range of emails (exclusive). Defaults to "2100/12/31".
+            The timezone for after/before may be PST at midnight (https://developers.google.com/gmail/api/guides/filtering). But clearly, the email dates are in UTC.
+
+        Returns:
+            List[Email]: list of Email objects
+        """
         logger.debug(f"Fetch email for sender {sender} from {after} until {before}.")
         query = f"after:{after} before:{before} from:{sender}"
         try:
