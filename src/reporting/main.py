@@ -13,12 +13,14 @@ def runner(
     df_scored_news_stories: pd.DataFrame,
     target_fields: Dict,
     report_date_range: List[str],
+    debug_mode: bool = True,
 ) -> None:
     # Create report
     report = Report(
         df_scored_news_stories=df_scored_news_stories,
         target_fields=target_fields,
         report_date_range=report_date_range,
+        debug_mode=debug_mode,
     )
     report_str = report.create_report()
     # Email report
