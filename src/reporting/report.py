@@ -60,27 +60,21 @@ class Report:
         self._validate_categories()
         self.start_date, self.end_date = report_date_range
 
-    def create_report(self, params: Dict = {}) -> str:
-        _params = {
-            "min_score_threshold": 3,
-            "min_nb_entries": 5,
-            "min_pct_entries": 0.1,
-        }
-        _params.update(params)
-        news_stories_for_report = self._filtered_news_stories(**_params)
+    def create_report(self, min_score_threshold: float = 3.0, min_nb_entries: int = 5, min_pct_entries: float = 0.1, path_folder_log: str = "log/") -> str:
+        news_stories_for_report = self._filtered_news_stories(min_score_threshold=min_score_threshold, min_nb_entries=min_nb_entries, min_pct_entries=min_pct_entries)
         self._log_df(
             news_stories_for_report=news_stories_for_report,
-            path_to_log=self.get_path_to_report_log(extension="parquet"),
+            path_to_log=self.get_path_to_report_log(extension="parquet", path_folder=path_folder_log),
         )
         report_str = self._create_report_from_news_stories(
             news_stories_for_report=news_stories_for_report
         )
-        report_path = self.get_path_to_report_log(extension="txt")
+        report_path = self.get_path_to_report_log(extension="txt", path_folder=path_folder_log)
         save_to_text(file_path=report_path, content=report_str)
         logger.info(f"Report saved in text format to {report_path}")
         return report_str
 
-    def get_path_to_report_log(self, extension: str, path_folder: str = "log/") -> str:
+    def get_path_to_report_log(self, extension: str, path_folder) -> str:
         now = datetime.today()
         formatted_now = now.strftime("%Y%m%d%H%M%S")
         file_name = Path(
