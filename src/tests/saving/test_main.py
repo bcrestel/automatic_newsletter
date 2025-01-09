@@ -92,3 +92,21 @@ def test_existing_file_3(tmp_path):
     )
     unique_ids = df_created_by_runner[UNIQUE_ID_COL].unique()
     assert len(unique_ids) == len(df_created_by_runner)
+
+
+def test_existing_file_4(tmp_path):
+    # Check we have the correct dataframes
+    df_log_report, df_created_by_runner = prep_existing_file(
+        tmp_path / TMP_PATH_TO_PARQUET, add_unique_id_col=True
+    )
+    existing_ids = df_log_report[UNIQUE_ID_COL]
+    df_created_by_runner = df_created_by_runner.set_index(UNIQUE_ID_COL)
+    df_existing = df_created_by_runner.loc[existing_ids]
+    df_log_report = df_log_report.set_index(UNIQUE_ID_COL).loc[existing_ids]
+    assert df_log_report.equals(
+        df_existing
+    ), f"{df_log_report[UNIQUE_ID_COL]} vs {df_existing[UNIQUE_ID_COL]}"
+    new_ids = df_created_by_runner.index.difference(df_existing.index)
+    assert df_log_report.reset_index(drop=True).equals(
+        df_created_by_runner.loc[new_ids].reset_index(drop=True)
+    )
