@@ -83,7 +83,10 @@ class GoogleSheets:
             return [word]
         else:
             p = inflect.engine()
-            pl = p.plural(word)
+            try:
+                pl = p.plural(word)
+            except:
+                logger.error(f"Could not get the plural of the word: {word}")
             if pl == word:
                 return [word]
             else:
