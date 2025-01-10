@@ -23,9 +23,35 @@ class Database:
         self._check_unique_id_in_db(db_new)
         self._update_db(db_new)
 
-    def get_data(self, start_date: str, end_date: str) -> pd.DataFrame:
-        raise NotImplementedError
-        # read data from the start_date and end_date
+    def get_data_from_range_dates(self, start_date: str, end_date: str) -> pd.DataFrame:
+        """Query data from database given a range of dates
+
+        Args:
+            start_date (str): Date in format YY-MM-DD
+            end_date (str): Date in format YY-MM-DD
+
+        Raises:
+            NotImplementedError: doesn't work if the database contains more than one time zone
+
+        Returns:
+            pd.DataFrame: query
+        """
+        # Convert start_date and end_date to the time zone used in the database
+        all_date_source_time_zone = self.db["date_source_time_zone"].unique()
+        if len(all_date_source_time_zone) != 1:
+            logger.error(
+                f"Database contains news stories in multiple time zones ({all_date_source_time_zone}). That case is not implemented yet."
+            )
+            raise NotImplementedError
+        else:
+            date_source_time_zone = all_date_source_time_zone.item()
+        start_date = pd.Timestamp(start_date + " 00:00", tz=date_source_time_zone)
+        end_date = pd.Timestamp(end_date + " 23:59", tz=date_source_time_zone)
+        # Create the mask and query
+        mask_date = (start_date < self.db["date_source"]) & (
+            self.db["date_source"] < end_date
+        )
+        return self.db[mask_date]
 
     def _get_max_unique_id(self):
         if self.db is None:
