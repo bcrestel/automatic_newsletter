@@ -1,5 +1,6 @@
 import base64
 import logging
+from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from pathlib import Path
@@ -26,32 +27,26 @@ class Gmail:
         self.scopes = scopes
         self.service = self._create_services()
 
-    def _create_services(self):
-        creds = Credentials.from_authorized_user_file(
-            filename=self.path_to_token, scopes=self.scopes
-        )
-        return build("gmail", "v1", credentials=creds)
-
     def fetch_emails(
-        self, sender: str, after: str = "1900/12/31", before: str = "2100/12/31"
+        self, sender: str, after: str = "1900-12-31", before: str = "2100-12-31"
     ) -> List[Email]:
         """Fetch emails from the gmail server
 
         Args:
             sender (str): fetch emails for that sender only
-            after (str, optional): Starting date of the range of emails (inclusive). Defaults to "1900/12/31".
-            before (str, optional): Ending date of the range of emails (exclusive). Defaults to "2100/12/31".
+            after (str, optional): Starting date of the range of emails, in format YYYY-MM-DD, understood at midnight in local time zone. Defaults to "1900-12-31".
+            before (str, optional): Ending date of the range of emails, in format YYYY-MM-DD, understood at 23:59:59 in local time zone. Defaults to "2100-12-31".
             The timezone for after/before may be PST at midnight (https://developers.google.com/gmail/api/guides/filtering). But clearly, the email dates are in UTC.
 
         Returns:
             List[Email]: list of Email objects
         """
         logger.debug(f"Fetch email for sender {sender} from {after} until {before}.")
-        query = f"after:{after} before:{before} from:{sender}"
+        after_int = self._convert_to_unix_time(after + " 00:00:00")
+        before_int = self._convert_to_unix_time(before + " 23:59:59")
+        query = f"after:{after_int} before:{before_int} from:{sender}"
         try:
-            results = (
-                self.service.users().messages().list(userId="me", q=query).execute()
-            )
+            results = self._get_messages(query=query)
         except RefreshError as e:
             logger.warning("Your Google token has expired.")
             recreate_token(
@@ -60,14 +55,51 @@ class Gmail:
                 scopes=self.scopes,
             )
             self.service = self._create_services()
-            results = (
-                self.service.users().messages().list(userId="me", q=query).execute()
-            )
+            results = self._get_messages(query=query)
         messages = results.get("messages", [])
         emails = [
             self._create_email_from_message(message=message) for message in messages
         ]
         return [email for email in emails if email["sender"] == sender]
+
+    def send_email(self, sender: str, recipient: str, subject: str, body: str) -> None:
+        # Create the message
+        message = MIMEMultipart()
+        message["to"] = recipient
+        message["from"] = sender
+        message["subject"] = subject
+
+        # Attach the body as text
+        msg = MIMEText(body)
+        message.attach(msg)
+
+        # Encode the message to base64
+        raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+
+        # Send the email
+        try:
+            message = (
+                self.service.users()
+                .messages()
+                .send(userId="me", body={"raw": raw_message})
+                .execute()
+            )
+            logger.info(f'Message {subject} sent; message ID: {message["id"]}')
+        except HttpError as error:
+            logger.error(f"An error occurred: {error}")
+
+    def _convert_to_unix_time(self, date_time: str) -> int:
+        dt = datetime.strptime(date_time, "%Y-%m-%d %H:%M:%S")
+        return int(dt.timestamp())
+
+    def _get_messages(self, query: str):
+        return self.service.users().messages().list(userId="me", q=query).execute()
+
+    def _create_services(self):
+        creds = Credentials.from_authorized_user_file(
+            filename=self.path_to_token, scopes=self.scopes
+        )
+        return build("gmail", "v1", credentials=creds)
 
     def _create_email_from_message(self, message: dict) -> Email:
         email_id = message["id"]
@@ -121,29 +153,3 @@ class Gmail:
                 + f"{subject}, sent on {date_utc} has mimeType: {mimeType}"
             )
             raise NotImplementedError
-
-    def send_email(self, sender: str, recipient: str, subject: str, body: str) -> None:
-        # Create the message
-        message = MIMEMultipart()
-        message["to"] = recipient
-        message["from"] = sender
-        message["subject"] = subject
-
-        # Attach the body as text
-        msg = MIMEText(body)
-        message.attach(msg)
-
-        # Encode the message to base64
-        raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
-
-        # Send the email
-        try:
-            message = (
-                self.service.users()
-                .messages()
-                .send(userId="me", body={"raw": raw_message})
-                .execute()
-            )
-            logger.info(f'Message {subject} sent; message ID: {message["id"]}')
-        except HttpError as error:
-            logger.error(f"An error occurred: {error}")
