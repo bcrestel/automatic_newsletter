@@ -39,6 +39,7 @@ def tldr_parser(email: Email) -> List[NewsStory]:
                     source_of_the_news=email["sender"],
                     news_summary=summary,
                     date_source=email["date_utc"],
+                    date_source_time_zone="utc",
                 )
             )
             ii = ii + 2

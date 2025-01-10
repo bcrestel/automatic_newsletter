@@ -23,6 +23,10 @@ class Database:
         self._check_unique_id_in_db(db_new)
         self._update_db(db_new)
 
+    def get_data(self, start_date: str, end_date: str) -> pd.DataFrame:
+        raise NotImplementedError
+        # read data from the start_date and end_date
+
     def _get_max_unique_id(self):
         if self.db is None:
             max_unique_id = 0

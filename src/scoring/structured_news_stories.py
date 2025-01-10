@@ -62,7 +62,10 @@ class StructuredNewsStories:
         df_news_stories = convert_list_of_dict_to_dataframe(
             list_news_stories, news_stories_keys
         )
-        df_news_stories["date_source"] = pd.to_datetime(df_news_stories["date_source"])
+        df_news_stories["date_source"] = pd.to_datetime(
+            df_news_stories["date_source"]
+        ).apply(lambda x: x.tz_convert("US/Eastern"))
+        df_news_stories["date_source_time_zone"] = "US/Eastern"
         return df_news_stories
 
     def _create_tmp_col(self):
