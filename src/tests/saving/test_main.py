@@ -12,7 +12,7 @@ TMP_PATH_TO_PARQUET = "test.parquet"
 
 def prep_no_file(path_tmp):
     df_log_report = pd.read_parquet(PATH_TO_LOG_PARQUET)
-    runner(df_scored_news_stories_new=df_log_report, path_to_file=path_tmp)
+    runner(df_scored_news_stories_new=df_log_report, path_to_db=path_tmp)
     df_created_by_runner = pd.read_parquet(path_tmp)
     return df_log_report, df_created_by_runner
 
@@ -54,7 +54,7 @@ def prep_existing_file(path_tmp, add_unique_id_col=False):
         shutil.copy(PATH_TO_LOG_PARQUET, path_tmp)
     df_log_report = pd.read_parquet(path_tmp)
     df_news_stories = pd.read_parquet(PATH_TO_LOG_PARQUET)
-    runner(df_scored_news_stories_new=df_news_stories, path_to_file=path_tmp)
+    runner(df_scored_news_stories_new=df_news_stories, path_to_db=path_tmp)
     df_created_by_runner = pd.read_parquet(path_tmp)
     return df_log_report, df_created_by_runner
 
