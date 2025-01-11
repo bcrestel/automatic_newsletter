@@ -5,6 +5,7 @@ import pandas as pd
 import spacy
 from spacy.matcher import PhraseMatcher
 
+from src.config import VERSION
 from src.news_story import NewsStory
 from src.scoring.config import SPREADSHEET_TABS_TO_ATTR
 from src.utils.pandas import convert_list_of_dict_to_dataframe
@@ -17,6 +18,7 @@ class StructuredNewsStories:
         self.df_news_stories = self._create_df_from_news_stories(
             list_news_stories=list_news_stories
         )
+        self.df_news_stories["version"] = VERSION
         self._tmp_col = "metadata_txt"
         self.nlp = spacy.load("en_core_web_sm")
 

@@ -8,3 +8,5 @@ SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets.readonly",
     "https://www.googleapis.com/auth/gmail.send",
 ]
+
+VERSION = "1.0"

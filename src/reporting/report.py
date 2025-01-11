@@ -6,6 +6,7 @@ from typing import Dict, List, Optional
 
 import pandas as pd
 
+from src.config import VERSION
 from src.saving.database import Database
 from src.utils.io.text import save_to_text
 from src.utils.list import flatten_list_of_lists
@@ -19,6 +20,7 @@ class Categories(Enum):
     FUNDING = "Funding"
     EVALUATION = "Evaluation"
 
+
 SEPARATOR_LONG = "=" * 60 + "\n"
 SEPARATOR_SHORT = "=" * 20 + "\n"
 COL_TAGS = [
@@ -28,7 +30,6 @@ COL_TAGS = [
     "personalities",
 ]
 COLUMN_INCLUDED_IN_REPORT = "included_in_report"
-VERSION = "1.0"
 
 
 class Report:
@@ -80,7 +81,9 @@ class Report:
         self._log_df_news_stories_for_report(
             news_stories_for_report=news_stories_for_report,
             path_to_log=self.get_path_to_report_log(
-                extension="parquet", path_folder=path_folder_log
+                log_type="df_news_stories",
+                extension="parquet",
+                path_folder=path_folder_log,
             ),
         )
         if self.debug_mode:
@@ -91,17 +94,17 @@ class Report:
             news_stories_for_report=news_stories_for_report
         )
         report_path = self.get_path_to_report_log(
-            extension="txt", path_folder=path_folder_log
+            log_type="report", extension="txt", path_folder=path_folder_log
         )
         save_to_text(file_path=report_path, content=report_str)
         logger.info(f"Report in text format was saved to {report_path}")
         return report_str
 
-    def get_path_to_report_log(self, extension: str, path_folder) -> str:
+    def get_path_to_report_log(self, log_type: str, extension: str, path_folder) -> str:
         now = datetime.today()
         formatted_now = now.strftime("%Y%m%d%H%M%S")
         file_name = Path(
-            f"log_report_{self.start_date}_{self.end_date}_{formatted_now}.{extension}"
+            f"{self.start_date}_{self.end_date}_{log_type}_{formatted_now}_v{VERSION}.{extension}"
         )
         path_to_report_log = Path(path_folder)
         path_to_report_log.mkdir(parents=True, exist_ok=True)
@@ -122,7 +125,9 @@ class Report:
                 logger.debug(
                     f"df_scored_news_stories has columns: {df_scored_news_stories.columns}"
                 )
-                raise KeyError(f"Missing column {self.score_col} in df_scored_news_stories")
+                raise KeyError(
+                    f"Missing column {self.score_col} in df_scored_news_stories"
+                )
         else:
             raise ValueError(
                 "You must define one of path_to_db and df_scored_news_stories."
@@ -261,7 +266,9 @@ class Report:
             min_score = score_min_entries
         else:
             min_score = min_score_threshold
-        return df_sorted_news_stories[df_sorted_news_stories[self.score_col] >= min_score]
+        return df_sorted_news_stories[
+            df_sorted_news_stories[self.score_col] >= min_score
+        ]
 
     def _top_k_themes(
         self, df: pd.DataFrame, k: int = 3, themes_to_exclude: list[str] = []
