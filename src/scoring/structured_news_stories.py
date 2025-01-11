@@ -9,8 +9,6 @@ from src.news_story import NewsStory
 from src.scoring.config import SPREADSHEET_TABS_TO_ATTR
 from src.utils.pandas import convert_list_of_dict_to_dataframe
 
-SCORE_COL = "score"
-
 logger = logging.getLogger(__name__)
 
 
@@ -26,7 +24,7 @@ class StructuredNewsStories:
         self, all_target_fields: Dict[str, Dict[str, List[str]]]
     ) -> None:
         self.add_all_metadata(all_target_fields=all_target_fields)
-        self.calculate_score()
+        self.calculate_score_category_count()
 
     def add_all_metadata(
         self, all_target_fields: Dict[str, Dict[str, List[str]]]
@@ -88,7 +86,7 @@ class StructuredNewsStories:
         text_split = " ".join(text.split())
         return text_split
 
-    def calculate_score(self):
+    def calculate_score_category_count(self):
         score = 0
         score_themes = 0
         for col in self.score_col:
@@ -98,4 +96,4 @@ class StructuredNewsStories:
                 score_themes = score_col
             score += score_col
         themes_penalty = (score_themes > 0).astype(int)
-        self.df_news_stories[SCORE_COL] = score * themes_penalty
+        self.df_news_stories["score_category_count"] = score * themes_penalty

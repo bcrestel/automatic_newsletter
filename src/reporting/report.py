@@ -7,7 +7,6 @@ from typing import Dict, List, Optional
 import pandas as pd
 
 from src.saving.database import Database
-from src.scoring.structured_news_stories import SCORE_COL
 from src.utils.io.text import save_to_text
 from src.utils.list import flatten_list_of_lists
 
@@ -20,19 +19,15 @@ class Categories(Enum):
     FUNDING = "Funding"
     EVALUATION = "Evaluation"
 
-
 SEPARATOR_LONG = "=" * 60 + "\n"
 SEPARATOR_SHORT = "=" * 20 + "\n"
-
 COL_TAGS = [
     "competitive_intelligence",
     "themes",
     "market_intelligence",
     "personalities",
 ]
-
 COLUMN_INCLUDED_IN_REPORT = "included_in_report"
-
 VERSION = "1.0"
 
 
@@ -44,6 +39,7 @@ class Report:
         df_scored_news_stories: Optional[pd.DataFrame] = None,
         path_to_db: Optional[str] = None,
         debug_mode: bool = True,
+        score_col: str = "score_category_count",
     ):
         """Build a report from scored news stories. News stories can be passed directly or queries from a Database
 
@@ -67,6 +63,7 @@ class Report:
         )
         self._validate_categories()
         self.debug_mode = debug_mode
+        self.score_col = score_col
 
     def create_report(
         self,
@@ -119,13 +116,13 @@ class Report:
                 start_date=self.start_date, end_date=self.end_date
             )
         elif df_scored_news_stories is not None:
-            if SCORE_COL in df_scored_news_stories.columns:
+            if self.score_col in df_scored_news_stories.columns:
                 self.df_ns = df_scored_news_stories
             else:
                 logger.debug(
                     f"df_scored_news_stories has columns: {df_scored_news_stories.columns}"
                 )
-                raise KeyError(f"Missing column {SCORE_COL} in df_scored_news_stories")
+                raise KeyError(f"Missing column {self.score_col} in df_scored_news_stories")
         else:
             raise ValueError(
                 "You must define one of path_to_db and df_scored_news_stories."
@@ -168,7 +165,7 @@ class Report:
                 f"Received wrong input argument min_pct_entries = {min_pct_entries}"
             )
         # Filter: only keep entries with non-zero score
-        df_nonzero = self.df_ns[self.df_ns[SCORE_COL] > 0.0]
+        df_nonzero = self.df_ns[self.df_ns[self.score_col] > 0.0]
         news_stories_for_report = {}
         # Section: competitive intelligence
         news_stories_for_report[Categories.COMPETTIVE_INTELLIGENCE.name] = df_nonzero[
@@ -243,10 +240,10 @@ class Report:
         Returns:
             pd.DataFrame: df filtered according to self.params
         """
-        df_sorted_news_stories = df_nonzero.sort_values(SCORE_COL, ascending=False)
+        df_sorted_news_stories = df_nonzero.sort_values(self.score_col, ascending=False)
         min_pct_entries_in_nb = int(len(df_sorted_news_stories) * min_pct_entries)
         min_entries = max(min_nb_entries, min_pct_entries_in_nb)
-        score_min_entries = df_sorted_news_stories.iloc[min_entries - 1][SCORE_COL]
+        score_min_entries = df_sorted_news_stories.iloc[min_entries - 1][self.score_col]
         logger.debug(
             f"min_nb_entries={min_nb_entries}, "
             + f"min_pct_entries_in_db={min_pct_entries_in_nb}, "
@@ -264,7 +261,7 @@ class Report:
             min_score = score_min_entries
         else:
             min_score = min_score_threshold
-        return df_sorted_news_stories[df_sorted_news_stories[SCORE_COL] >= min_score]
+        return df_sorted_news_stories[df_sorted_news_stories[self.score_col] >= min_score]
 
     def _top_k_themes(
         self, df: pd.DataFrame, k: int = 3, themes_to_exclude: list[str] = []
