@@ -2,16 +2,13 @@ import logging
 
 import pandas as pd
 
-from src.saving.database import UNIQUE_ID_COL, Database
+from src.saving.database import Database
 
 logger = logging.getLogger(__name__)
 # TODO: review PATH_TO_DB. Could be log/ folder at root, and that folder is mounted in the docker file
-PATH_TO_DB = "'../../secrets_vault/scored_news_stories.parquet'"
 
 
-def runner(
-    df_scored_news_stories_new: pd.DataFrame, path_to_db: str = PATH_TO_DB
-) -> None:
+def runner(df_scored_news_stories_new: pd.DataFrame, path_to_db: str) -> None:
     """Add unique_id to df_scored_news_stories_new and add to existing db (if any)
 
     Args:

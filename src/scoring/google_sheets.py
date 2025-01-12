@@ -8,11 +8,8 @@ import pandas as pd
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
-from src.scoring.config import (
-    PATH_TO_ROOT,
-    PATH_TO_SPREADSHEET_ID,
-    SPREADSHEET_TABS_TO_ATTR,
-)
+from src.config import PATH_TO_ROOT
+from src.scoring.config import PATH_TO_SPREADSHEET_ID, SPREADSHEET_TABS_TO_ATTR
 from src.utils.list import flatten_list_of_lists
 
 PATTERN_AI = r"\b[a-zA-Z]*\s?AI\b"

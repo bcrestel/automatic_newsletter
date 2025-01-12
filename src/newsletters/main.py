@@ -2,16 +2,25 @@ import logging
 from pathlib import Path
 from typing import List
 
-from src.config import CREDENTIAL_PATH, SCOPES, TOKEN_PATH
+from src.config import CREDENTIAL_PATH, PATH_TO_ROOT, SCOPES, TOKEN_PATH
 from src.gmail import Gmail
 from src.news_story import NewsStory
-from src.newsletters.config import NEWSLETTER_AND_PARSER, PATH_TO_ROOT
+from src.newsletters.config import NEWSLETTER_AND_PARSER
 from src.utils.list import flatten_list_of_lists
 
 logger = logging.getLogger(__name__)
 
 
 def runner(after: str, before: str) -> List[NewsStory]:
+    """Fetch and parse newsletters from assigned gmail account
+
+    Args:
+        after (str): start date of the range. format "YYYY-MM-DD". Inclusive
+        before (str): end date of the range. format "YYYY-MM-DD". Inclusive
+
+    Returns:
+        List[NewsStory]: List of processed news stories
+    """
     gmail = Gmail(
         path_to_token=PATH_TO_ROOT / TOKEN_PATH,
         path_to_credentials=PATH_TO_ROOT / CREDENTIAL_PATH,
@@ -27,7 +36,7 @@ def runner(after: str, before: str) -> List[NewsStory]:
     }
     logger.info(f"Using {len(emails.keys())} sender(s): {emails.keys()}.")
     for key, value in emails.items():
-        logger.debug(f"Found {len(value)} emails from sender {key}")
+        logger.info(f"Found {len(value)} emails from sender {key}")
 
     # Extract the news stories from the emails
     logger.info("Parsing emails to extract news stories")
@@ -37,6 +46,8 @@ def runner(after: str, before: str) -> List[NewsStory]:
         for email in list_emails
     ]
     news_stories = flatten_list_of_lists(news_stories)
-    logger.info(f"Newsletters block complete. Found {len(news_stories)} news stories.")
+    logger.info(
+        f"Newsletters block complete. Found {len(news_stories)} news stories in total."
+    )
 
     return news_stories
