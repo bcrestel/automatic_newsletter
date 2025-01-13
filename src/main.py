@@ -74,25 +74,31 @@ if __name__ == "__main__":
         description="Analyze news sources and automatically create a newsletter."
     )
     parser.add_argument(
-        "--start_date", required=True, type=str, help="YYYY-MM-DD. Inclusive"
+        "--start_date",
+        required=True,
+        type=str,
+        help="Start date in format 'YYYY-MM-DD' (Inclusive)",
     )
     parser.add_argument(
-        "--end_date", required=True, type=str, help="YYYY-MM-DD. Inclusive"
-    )
-    parser.add_argument(
-        "--create_report", action="store_true", help="True will create a report"
-    )
-    parser.add_argument(
-        "--save_db",
-        action="store_true",
-        help="True will save to the database. "
-        + "Only works if we also have 'parse_news_stories' set to True",
+        "--end_date",
+        required=True,
+        type=str,
+        help="End date in format 'YYYY-MM-DD' (Inclusive)",
     )
     parser.add_argument(
         "--parse_news_stories",
         action="store_true",
-        help="True will query new data for the range of dates specified, "
+        help="If True, will query new data for the range of dates specified, "
         + "parse the news stories, and score them",
+    )
+    parser.add_argument(
+        "--save_db",
+        action="store_true",
+        help="If True, will save to the database. "
+        + "Only works if we also have 'parse_news_stories' set to True",
+    )
+    parser.add_argument(
+        "--create_report", action="store_true", help="If True, will create a report"
     )
 
     args = parser.parse_args()

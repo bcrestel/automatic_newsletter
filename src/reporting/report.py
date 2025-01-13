@@ -90,7 +90,7 @@ class Report:
             path_to_log=self.get_path_to_report_log(
                 log_type="df_news_stories",
                 extension="parquet",
-                path_folder=path_folder_log,
+                path_folder=path_folder_log / Path("df_news_stories"),
             ),
         )
         if self.debug_mode:
@@ -101,7 +101,9 @@ class Report:
             news_stories_for_report=news_stories_for_report
         )
         report_path = self.get_path_to_report_log(
-            log_type="report", extension="txt", path_folder=path_folder_log
+            log_type="report",
+            extension="txt",
+            path_folder=path_folder_log / Path("reports"),
         )
         save_to_text(file_path=report_path, content=report_str)
         logger.info(f"Report in text format was saved to {report_path}")
@@ -111,9 +113,9 @@ class Report:
         self, log_type: str, extension: str, path_folder: Path
     ) -> str:
         now = datetime.today()
-        formatted_now = now.strftime("%Y%m%d%H%M%S")
+        formatted_now = now.strftime("%Y%m%d-%H%M%S")
         file_name = Path(
-            f"{self.start_date}_{self.end_date}_{log_type}_{formatted_now}_v{VERSION}.{extension}"
+            f"{self.start_date}_{self.end_date}__{log_type}__{formatted_now}__v{VERSION}.{extension}"
         )
         path_to_report_log = path_folder
         path_to_report_log.mkdir(parents=True, exist_ok=True)
