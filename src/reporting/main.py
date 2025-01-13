@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import pandas as pd
 
@@ -10,14 +10,16 @@ from src.utils.io.text import load_from_text
 
 
 def runner(
-    df_scored_news_stories: pd.DataFrame,
-    target_fields: Dict,
     report_date_range: List[str],
+    target_fields: Dict,
+    df_scored_news_stories: Optional[pd.DataFrame] = None,
+    path_to_db: Optional[str] = None,
     debug_mode: bool = True,
 ) -> None:
     # Create report
     report = Report(
         df_scored_news_stories=df_scored_news_stories,
+        path_to_db=path_to_db,
         target_fields=target_fields,
         score_col="score_category_count",
         report_date_range=report_date_range,
