@@ -7,7 +7,6 @@ from src.newsletters.main import runner as runner_newsletters
 from src.reporting.main import runner as runner_reporting
 from src.saving.main import runner as runner_saving
 from src.scoring.main import runner as runner_scoring
-from src.utils.date import get_date_YYYY_MM_DD
 
 logging.basicConfig(
     level=logging.INFO,
@@ -16,7 +15,13 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def runner_from_newsstories_to_report(report_date_range: List[str], path_to_db: str):
+def runner_pipeline(
+    report_date_range: List[str],
+    path_to_db: str,
+    create_report: bool,
+    save_db: bool,
+    parse_news_stories: bool,
+):
     """Run the end-to-end pipeline from extract news stories to creating and emailing the report
 
     Args:
@@ -24,45 +29,84 @@ def runner_from_newsstories_to_report(report_date_range: List[str], path_to_db: 
         Start date is set to midnight (so inclusive).
         End date is set to 23:59:59 (so inclusive too).
     """
-    logger.info(
-        f"Running end-to-end pipeline to create a report for range: "
-        + f"{report_date_range[0]} - {report_date_range[1]}"
-    )
-    list_news_stories = runner_newsletters(
-        after=report_date_range[0], before=report_date_range[1]
-    )
-    df_scored_news_stories, target_fields = runner_scoring(
-        list_news_stories=list_news_stories
-    )
-    runner_saving(
-        df_scored_news_stories_new=df_scored_news_stories, path_to_db=path_to_db
-    )
-    runner_reporting(
-        df_scored_news_stories=df_scored_news_stories,
-        target_fields=target_fields,
-        report_date_range=report_date_range,
-    )
+    if not parse_news_stories and not create_report:
+        logger.warning(
+            "You need to select at least --parse_news_stories or --create_report. "
+            + "Since both are set to False, no action will be taken."
+        )
+    else:
+        logger.info(
+            f"Running pipeline for the range of dates: "
+            + f"{report_date_range[0]} - {report_date_range[1]}"
+        )
+    if parse_news_stories:
+        list_news_stories = runner_newsletters(
+            after=report_date_range[0], before=report_date_range[1]
+        )
+        df_scored_news_stories, target_fields = runner_scoring(
+            list_news_stories=list_news_stories
+        )
+        if save_db:
+            runner_saving(
+                df_scored_news_stories_new=df_scored_news_stories, path_to_db=path_to_db
+            )
+    if create_report:
+        if parse_news_stories:
+            runner_reporting(
+                df_scored_news_stories=df_scored_news_stories,
+                target_fields=target_fields,
+                report_date_range=report_date_range,
+            )
+        else:
+            runner_reporting(
+                path_to_db=path_to_db,
+                target_fields=target_fields,
+                report_date_range=report_date_range,
+            )
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Description of your script.")
-    parser.add_argument("start_date", type=str, help="YYYY-MM-DD. Inclusive")
-    parser.add_argument("end_date", type=str, help="YYYY-MM-DD. Inclusive")
+    parser = argparse.ArgumentParser(
+        description="Analyze news sources and automatically create a newsletter."
+    )
+    parser.add_argument(
+        "--start_date", required=True, type=str, help="YYYY-MM-DD. Inclusive"
+    )
+    parser.add_argument(
+        "--end_date", required=True, type=str, help="YYYY-MM-DD. Inclusive"
+    )
+    parser.add_argument(
+        "--create_report", action="store_true", help="True will create a report"
+    )
+    parser.add_argument(
+        "--save_db",
+        action="store_true",
+        help="True will save to the database. "
+        + "Only works if we also have 'parse_news_stories' set to True",
+    )
+    parser.add_argument(
+        "--parse_news_stories",
+        action="store_true",
+        help="True will query new data for the range of dates specified, "
+        + "parse the news stories, and score them",
+    )
 
     args = parser.parse_args()
     start_date = args.start_date
     end_date = args.end_date
+    create_report = args.create_report
+    save_db = args.save_db
+    parse_news_stories = args.parse_news_stories
+    if save_db and not parse_news_stories:
+        logger.warning(
+            f"save_db will be inactive as parse_news_stories was set to False"
+        )
+        save_db = False
 
-    runner_from_newsstories_to_report(
-        report_date_range=[start_date, end_date], path_to_db=PATH_TO_DB
+    runner_pipeline(
+        report_date_range=[start_date, end_date],
+        path_to_db=PATH_TO_DB,
+        create_report=create_report,
+        save_db=save_db,
+        parse_news_stories=parse_news_stories,
     )
-
-
-# def runner():
-#    last_report_date = get_last_report_date()
-#    today_date = get_date_YYYY_MM_DD()
-#    day_of_the_week = get_date_of_the_week
-#    if day_of_the_week in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]:
-#        run_daily_report(today_date, last_report_date)
-#    if day_of_the_week == "Saturday":
-#        run_weekly_report(today_date)
