@@ -3,7 +3,7 @@ from typing import Dict, List, Optional
 
 import pandas as pd
 
-from src.config import SCOPES
+from src.config import CREDENTIAL_PATH, SCOPES, TOKEN_PATH
 from src.gmail import Gmail
 from src.reporting.report import Report
 from src.utils.io.text import load_from_text
@@ -28,8 +28,8 @@ def runner(
     report_str = report.create_report()
     # Email report
     gmail_api = Gmail(
-        path_to_token=Path("/home/secrets_vault/token.json"),
-        path_to_credentials=Path("/home/secrets_vault/credentials.json"),
+        path_to_token=TOKEN_PATH,
+        path_to_credentials=CREDENTIAL_PATH,
         scopes=SCOPES,
     )
     sender = load_from_text("/home/secrets_vault/email_sender.txt").rstrip()

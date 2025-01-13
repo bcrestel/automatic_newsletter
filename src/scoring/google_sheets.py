@@ -8,7 +8,6 @@ import pandas as pd
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
-from src.config import PATH_TO_ROOT
 from src.scoring.config import PATH_TO_SPREADSHEET_ID, SPREADSHEET_TABS_TO_ATTR
 from src.utils.list import flatten_list_of_lists
 
@@ -27,7 +26,7 @@ class GoogleSheets:
         self.path_to_credentials = path_to_credentials
         self.scopes = scopes
         self.service = self.create_services()
-        with open(PATH_TO_ROOT / PATH_TO_SPREADSHEET_ID, "r") as f:
+        with open(PATH_TO_SPREADSHEET_ID, "r") as f:
             self.spreadsheet_id = f.readline().strip()
 
     def create_services(self) -> Any:

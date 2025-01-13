@@ -36,21 +36,25 @@ def runner_pipeline(
         )
     else:
         logger.info(
-            f"Running pipeline for the range of dates: "
+            f"Running pipeline for the time period: "
             + f"{report_date_range[0]} - {report_date_range[1]}"
         )
     if parse_news_stories:
+        logger.info("Parsing newsletters for that time period")
         list_news_stories = runner_newsletters(
             after=report_date_range[0], before=report_date_range[1]
         )
+        logger.info("Scoring all collected news stories")
         df_scored_news_stories, target_fields = runner_scoring(
             list_news_stories=list_news_stories
         )
         if save_db:
+            logger.info("Saving scored news stories to db")
             runner_saving(
                 df_scored_news_stories_new=df_scored_news_stories, path_to_db=path_to_db
             )
     if create_report:
+        logger.info("Creating and sending report")
         if parse_news_stories:
             runner_reporting(
                 df_scored_news_stories=df_scored_news_stories,

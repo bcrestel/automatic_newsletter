@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 from typing import List
 
-from src.config import CREDENTIAL_PATH, PATH_TO_ROOT, SCOPES, TOKEN_PATH
+from src.config import CREDENTIAL_PATH, SCOPES, TOKEN_PATH
 from src.gmail import Gmail
 from src.news_story import NewsStory
 from src.newsletters.config import NEWSLETTER_AND_PARSER
@@ -22,8 +22,8 @@ def runner(after: str, before: str) -> List[NewsStory]:
         List[NewsStory]: List of processed news stories
     """
     gmail = Gmail(
-        path_to_token=PATH_TO_ROOT / TOKEN_PATH,
-        path_to_credentials=PATH_TO_ROOT / CREDENTIAL_PATH,
+        path_to_token=TOKEN_PATH,
+        path_to_credentials=CREDENTIAL_PATH,
         scopes=SCOPES,
     )
 

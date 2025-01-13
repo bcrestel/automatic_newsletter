@@ -6,7 +6,7 @@ from typing import Dict, List, Optional
 
 import pandas as pd
 
-from src.config import VERSION
+from src.config import PATH_TO_LOGS_FOLDER, VERSION
 from src.saving.database import Database
 from src.utils.io.text import save_to_text
 from src.utils.list import flatten_list_of_lists
@@ -78,7 +78,7 @@ class Report:
         min_score_threshold: float = 3.0,
         min_nb_entries: int = 5,
         min_pct_entries: float = 0.1,
-        path_folder_log: str = "log/",
+        path_folder_log: Path = PATH_TO_LOGS_FOLDER,
     ) -> str:
         news_stories_for_report = self._filtered_news_stories(
             min_score_threshold=min_score_threshold,
@@ -107,13 +107,15 @@ class Report:
         logger.info(f"Report in text format was saved to {report_path}")
         return report_str
 
-    def get_path_to_report_log(self, log_type: str, extension: str, path_folder) -> str:
+    def get_path_to_report_log(
+        self, log_type: str, extension: str, path_folder: Path
+    ) -> str:
         now = datetime.today()
         formatted_now = now.strftime("%Y%m%d%H%M%S")
         file_name = Path(
             f"{self.start_date}_{self.end_date}_{log_type}_{formatted_now}_v{VERSION}.{extension}"
         )
-        path_to_report_log = Path(path_folder)
+        path_to_report_log = path_folder
         path_to_report_log.mkdir(parents=True, exist_ok=True)
         return path_to_report_log / file_name
 

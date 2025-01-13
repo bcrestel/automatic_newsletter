@@ -1,8 +1,7 @@
 from pathlib import Path
 
-PATH_TO_ROOT = Path("/home")
-TOKEN_PATH = Path("secrets_vault/token.json")
-CREDENTIAL_PATH = Path("secrets_vault/credentials.json")
+TOKEN_PATH = Path("/home/secrets_vault/token.json")
+CREDENTIAL_PATH = Path("/home/secrets_vault/credentials.json")
 
 SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly",
@@ -12,4 +11,5 @@ SCOPES = [
 
 VERSION = "1.0"
 
-PATH_TO_DB = "/home/logs/database_news_stories.parquet"
+PATH_TO_LOGS_FOLDER = Path("/home/logs")
+PATH_TO_DB = PATH_TO_LOGS_FOLDER / Path("database_news_stories.parquet")

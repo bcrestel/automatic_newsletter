@@ -8,8 +8,8 @@ UNIQUE_ID_COL = "unique_id"
 
 
 class Database:
-    def __init__(self, path_to_db: str):
-        self.path_to_db = Path(path_to_db)
+    def __init__(self, path_to_db: Path):
+        self.path_to_db = path_to_db
         try:
             self.db = pd.read_parquet(self.path_to_db)
         except FileNotFoundError as e:

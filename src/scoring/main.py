@@ -3,11 +3,10 @@ from typing import Dict, List, Tuple
 
 import pandas as pd
 
-from src.config import CREDENTIAL_PATH, PATH_TO_ROOT, SCOPES, TOKEN_PATH
+from src.config import CREDENTIAL_PATH, SCOPES, TOKEN_PATH
 from src.news_story import NewsStory
 from src.scoring.google_sheets import GoogleSheets
 from src.scoring.structured_news_stories import StructuredNewsStories
-from src.utils.pandas import convert_list_of_dict_to_dataframe
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +27,8 @@ def runner(list_news_stories: List[NewsStory]) -> Tuple[pd.DataFrame, Dict]:
     # Load the target fields
     logger.info(f"Querying the metadata tags from Google Sheets.")
     sheets = GoogleSheets(
-        path_to_token=PATH_TO_ROOT / TOKEN_PATH,
-        path_to_credentials=PATH_TO_ROOT / CREDENTIAL_PATH,
+        path_to_token=TOKEN_PATH,
+        path_to_credentials=CREDENTIAL_PATH,
         scopes=SCOPES,
     )
     target_fields = sheets.get_all_tables()
