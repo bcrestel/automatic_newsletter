@@ -40,7 +40,7 @@ upgrade:
 .PHONY : run
 run: build
 	$(info ***** Running *****)
-	$(DOCKER_RUN) $(DOCKER_IMAGE)  -c "cd src; python hello_world.py"
+	$(DOCKER_RUN) $(DOCKER_IMAGE) -c "python src/generate_report_from_last_time.py"
 
 .PHONY : shell
 shell: build
