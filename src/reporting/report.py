@@ -214,8 +214,9 @@ class Report:
             df=df_min_score, k=top_k, themes_to_exclude=themes_to_exclude
         )
         for theme in leading_themes:
+            # Select all news stories related to that themes and that have a non-zero score
             news_stories_for_report[f"{Categories.THEMES.name}-{theme}"] = (
-                self._get_df_from_theme(df_min_score, theme)
+                self._get_df_from_theme(df_nonzero, theme)
             )
         idx_so_far = self._get_idx_from_dict_of_df(news_stories_for_report)
         idx_other = df_min_score.index.difference(idx_so_far)
