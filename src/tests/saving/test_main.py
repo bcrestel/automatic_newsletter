@@ -4,7 +4,8 @@ import shutil
 import pandas as pd
 import pytest
 
-from src.saving.main import UNIQUE_ID_COL, runner
+from src.saving.database import UNIQUE_ID_COL
+from src.saving.main import runner
 
 PATH_TO_LOG_PARQUET = "/home/src/tests/data/test_log_report.parquet"
 TMP_PATH_TO_PARQUET = "test.parquet"

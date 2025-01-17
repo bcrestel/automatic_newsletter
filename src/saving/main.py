@@ -6,7 +6,6 @@ import pandas as pd
 from src.saving.database import Database
 
 logger = logging.getLogger(__name__)
-# TODO: review PATH_TO_DB. Could be log/ folder at root, and that folder is mounted in the docker file
 
 
 def runner(df_scored_news_stories_new: pd.DataFrame, path_to_db: Path) -> None:
