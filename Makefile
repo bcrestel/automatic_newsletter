@@ -3,10 +3,13 @@
 IMAGE_NAME = automatic_newsletter
 IMAGE_TAG = 1.0
 ###################
+# env variables to load at runtime
+LOAD_ENV = --env OPENAI_API_KEY=$(OPENAI_API_KEY) --env ANTHROPIC_API_KEY=$(ANTHROPIC_API_KEY) --env HUGGINGFACEHUB_API_TOKEN=$(HUGGINGFACEHUB_API_TOKEN) --env GOOGLE_API_KEY=$(GOOGLE_API_KEY) --env GROQ_API_KEY=$(GROQ_API_KEY)
+###################
 # FIXED PARAMETERS
 TEST_FOLDER = src/tests
 FORMAT_FOLDER = src
-DOCKER_RUN = docker run -it --entrypoint=bash -e TZ=America/New_York -w /home -v $(PWD):/home/
+DOCKER_RUN = docker run -it --entrypoint=bash $(LOAD_ENV) -e TZ=America/New_York -w /home -v $(PWD):/home/
 DOCKER_IMAGE = $(IMAGE_NAME):$(IMAGE_TAG)
 DOCKER_IMAGE_PIPTOOLS = piptools:latest # NOTE: this image should already exist
 ###################

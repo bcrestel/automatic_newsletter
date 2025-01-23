@@ -7,3 +7,6 @@ __pycache__
 secrets_vault/*
 *.parquet
 .Trash-*
+*.jpg
+*.png
+*DS_Store*
