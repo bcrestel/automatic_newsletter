@@ -3,10 +3,11 @@
 .idea
 *.json
 *.txt
-__pycache__
+*__pycache__*
 secrets_vault/*
 *.parquet
 .Trash-*
 *.jpg
 *.png
 *DS_Store*
+*.pyc
