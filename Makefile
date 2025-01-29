@@ -4,14 +4,19 @@ IMAGE_NAME = automatic_newsletter
 IMAGE_TAG = 1.0
 ###################
 # env variables to load at runtime
-LOAD_ENV = --env OPENAI_API_KEY=$(OPENAI_API_KEY) --env ANTHROPIC_API_KEY=$(ANTHROPIC_API_KEY) --env HUGGINGFACEHUB_API_TOKEN=$(HUGGINGFACEHUB_API_TOKEN) --env GOOGLE_API_KEY=$(GOOGLE_API_KEY) --env GROQ_API_KEY=$(GROQ_API_KEY)
+LOAD_ENV = --env OPENAI_API_KEY=$(OPENAI_API_KEY) \
+--env ANTHROPIC_API_KEY=$(ANTHROPIC_API_KEY) \
+--env HUGGINGFACEHUB_API_TOKEN=$(HUGGINGFACEHUB_API_TOKEN) \
+--env GEMINI_API_KEY=$(GEMINI_API_KEY) \
+--env GROQ_API_KEY=$(GROQ_API_KEY) \
+--env MISTRAL_API_KEY=$(MISTRAL_API_KEY) \
+--env OPENROUTER_API_KEY=$(OPENROUTER_API_KEY)
 ###################
 # FIXED PARAMETERS
 TEST_FOLDER = src/tests
 FORMAT_FOLDER = src
 DOCKER_RUN = docker run -it --entrypoint=bash $(LOAD_ENV) -e TZ=America/New_York -w /home -v $(PWD):/home/
 DOCKER_IMAGE = $(IMAGE_NAME):$(IMAGE_TAG)
-DOCKER_IMAGE_PIPTOOLS = piptools:latest # NOTE: this image should already exist
 ###################
 
 #
@@ -89,4 +94,11 @@ format: build
 .PHONY : clean
 clean:
 	$(info ***** Cleaning files *****)
-	rm -rf .build .build_piptools requirements.txt
+	rm -rf .build requirements.txt
+
+#
+# Re-build the base piptools image
+#
+.PHONY: build-piptools
+build-piptools:
+	docker build -f Dockerfile_piptools -t piptools:latest .
