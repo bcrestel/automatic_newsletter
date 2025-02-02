@@ -7,6 +7,7 @@ from typing import Dict, List, Optional
 import pandas as pd
 
 from src.config import PATH_TO_LOGS_FOLDER, VERSION
+from src.genai_model.summarizer import Summarizer
 from src.saving.database import Database
 from src.utils.io.text import save_to_text
 from src.utils.list import flatten_list_of_lists
@@ -242,9 +243,17 @@ class Report:
         self, news_stories_for_report: Dict[str, pd.DataFrame]
     ) -> str:
         next_line = "\n\n" + SEPARATOR_LONG + "\n\n"
+        summarizer = Summarizer()
         report = ""
         for section_title, df_section in news_stories_for_report.items():
-            report += f"# {section_title}\n" + self._format_section(df_section)
+            formatted_section = self._format_section(df_section)
+            if len(df_section) > 1:
+                response = summarizer.summarize(formatted_section)
+                summary = summarizer.get_content_from_response(response)
+                section_content = f"Summary: {summary}\n" + formatted_section
+            else:
+                section_content = formatted_section
+            report += f"# {section_title}\n" + section_content
             report += next_line
         return report
 
