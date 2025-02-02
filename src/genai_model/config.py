@@ -1,4 +1,3 @@
-
 # small = 8B models
 MODELS_CATALOG = {
     "reasoning": [
@@ -7,7 +6,7 @@ MODELS_CATALOG = {
         "gemini/gemini-2.0-flash-thinking-exp-1219",
         "openrouter/google/gemini-2.0-flash-thinking-exp-1219:free",
         "openrouter/deepseek/deepseek-r1:free",
-        ],
+    ],
     "large": [
         "gemini/gemini-exp-1206",
         "openrouter/google/gemini-exp-1206:free",
@@ -22,7 +21,7 @@ MODELS_CATALOG = {
         "mistral/mistral-large-2411",
         "mistral/mistral-large-2407",
         "mistral/mistral-large-2402",
-        ],
+    ],
     "medium": [
         "gemini/gemini-2.0-flash-exp",
         "openrouter/google/gemini-2.0-flash-exp:free",
@@ -34,7 +33,7 @@ MODELS_CATALOG = {
         "groq/llama-3.3-70b-specdec",
         "gemini/gemini-1.5-flash-001",
         "mistral/mistral-medium",
-        ],
+    ],
     "small": [
         "gemini/gemini-1.5-flash-8b-latest",
         "gemini/gemini-1.5-flash-8b-001",
@@ -48,9 +47,9 @@ MODELS_CATALOG = {
         "openrouter/meta-llama/llama-3.1-8b-instruct:free",
         "groq/llama-3-8b-8192",
         "openrouter/meta-llama/llama-3-8b-instruct:free",
-        ],
+    ],
     "moderation": [
         "groq/llama-guard-3-8b",
         "mistral/mistral-moderation-2411",
-        ],
-        }
+    ],
+}
