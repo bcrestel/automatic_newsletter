@@ -27,7 +27,7 @@ def recreate_token(path_to_token: str, path_to_credentials: str, scopes: List[st
         )
     # re-create new token
     flow = InstalledAppFlow.from_client_secrets_file(path_to_credentials, scopes)
-    creds = flow.run_local_server(port=8080, bind_addr="0.0.0.0")
+    creds = flow.run_local_server(port=8080, bind_addr="0.0.0.0", open_browser=False)
     with open(path_to_token, "w") as token:
         token.write(creds.to_json())
         logger.info(f"Wrote new token at {path_to_token}")
