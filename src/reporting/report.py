@@ -81,6 +81,21 @@ class Report:
         min_pct_entries: float = 0.1,
         path_folder_log: Path = PATH_TO_LOGS_FOLDER,
     ) -> str:
+        """Create the report in text string. Steps include:
+        1. Filter the candidate news stories according to the inoput parameters
+        2. Log the selected news stories
+        3. Format the candidate news stories into a report
+        4. Log the report
+
+        Args:
+            min_score_threshold (float, optional): Lowest score to be included in report. Defaults to 3.0.
+            min_nb_entries (int, optional): Minimum number of entries in a category to include. Defaults to 5.
+            min_pct_entries (float, optional): Minimum percentage of the total number of entries to include. Defaults to 0.1.
+            path_folder_log (Path, optional): Path to the log folder. Defaults to PATH_TO_LOGS_FOLDER.
+
+        Returns:
+            str: formatted report in string format
+        """
         news_stories_for_report = self._filtered_news_stories(
             min_score_threshold=min_score_threshold,
             min_nb_entries=min_nb_entries,
@@ -113,6 +128,16 @@ class Report:
     def get_path_to_report_log(
         self, log_type: str, extension: str, path_folder: Path
     ) -> str:
+        """Path of the file to log
+
+        Args:
+            log_type (str): type of file to log
+            extension (str): file extension
+            path_folder (Path): path to the log folder
+
+        Returns:
+            str: path in str format
+        """
         now = datetime.today()
         formatted_now = now.strftime("%Y%m%d-%H%M%S")
         file_name = Path(
@@ -125,6 +150,19 @@ class Report:
     def _build_df_ns(
         self, df_scored_news_stories: Optional[pd.DataFrame], path_to_db: Optional[str]
     ) -> pd.DataFrame:
+        """Query the news stories, either from an input dataframe or from a database
+
+        Args:
+            df_scored_news_stories (Optional[pd.DataFrame]): Dataframe containing the news stories
+            path_to_db (Optional[str]): path to a db (parquet format) where the news stories are stored
+
+        Raises:
+            KeyError: if the dataframe is missing certain columns
+            ValueError: at least one of df_scored_news_stories or path_to_db must be passed
+
+        Returns:
+            pd.DataFrame: dataframe containing the news stories
+        """
         if path_to_db is not None:
             logger.info(
                 f"We'll use the news stories queried from the database {path_to_db}"
@@ -154,6 +192,11 @@ class Report:
         return df_ns
 
     def _validate_categories(self):
+        """Validate that the dict self.target_fields is correctly formatted
+
+        Raises:
+            KeyError: if a category is missing
+        """
         tabs = self.target_fields.keys()
         for tab in [Categories.COMPETTIVE_INTELLIGENCE.value, Categories.THEMES.value]:
             if tab not in tabs:
@@ -242,6 +285,14 @@ class Report:
     def _create_report_from_news_stories(
         self, news_stories_for_report: Dict[str, pd.DataFrame]
     ) -> str:
+        """Create the report in string format from the candidate news stories
+
+        Args:
+            news_stories_for_report (Dict[str, pd.DataFrame]): candidate news stories
+
+        Returns:
+            str: formatted report in string format
+        """
         next_line = "\n\n" + SEPARATOR_LONG + "\n\n"
         summarizer = Summarizer()
         report = ""
@@ -257,7 +308,15 @@ class Report:
             report += next_line
         return report
 
-    def _get_idx_from_dict_of_df(self, dict_df: Dict[str, pd.DataFrame]) -> list[int]:
+    def _get_idx_from_dict_of_df(self, dict_df: Dict[str, pd.DataFrame]) -> List[int]:
+        """Get all the indices from multiple dataframes stored in a dict[str, pd.Dataframe]
+
+        Args:
+            dict_df (Dict[str, pd.DataFrame]): Dictionary of str to pd.DataFrame
+
+        Returns:
+            List[int]: List of indices
+        """
         return list(set(flatten_list_of_lists([df.index for df in dict_df.values()])))
 
     def _get_df_min_score(
@@ -301,8 +360,18 @@ class Report:
         ]
 
     def _top_k_themes(
-        self, df: pd.DataFrame, k: int = 3, themes_to_exclude: list[str] = []
-    ) -> Optional[str]:
+        self, df: pd.DataFrame, k: int = 3, themes_to_exclude: List[str] = []
+    ) -> List[str]:
+        """
+
+        Args:
+            df (pd.DataFrame): _description_
+            k (int, optional): _description_. Defaults to 3.
+            themes_to_exclude (list[str], optional): _description_. Defaults to [].
+
+        Returns:
+            List[str]: List of top-k themes, in string format
+        """
         ranked_themes = (
             (df["themes"] + df["market_intelligence"]).explode().value_counts()
         )
@@ -315,11 +384,28 @@ class Report:
         return top_k_themes
 
     def _get_df_from_theme(self, df: pd.DataFrame, theme: str) -> pd.DataFrame:
+        """Return the rows of the dataframe that contain a certain theme
+
+        Args:
+            df (pd.DataFrame): dataframe of news stories
+            theme (str): theme to query
+
+        Returns:
+            pd.DataFrame: slice of the input dataframe, df, corresponding only to the entries that contain that theme
+        """
         themes_exploded = (df["themes"] + df["market_intelligence"]).explode()
         idx = themes_exploded[themes_exploded == theme].index
         return df.loc[idx]
 
     def _format_section(self, news_stories: pd.DataFrame) -> str:
+        """Format a section of the report, given all news stories in a dataframe
+
+        Args:
+            news_stories (pd.DataFrame): news stories all grouped into a dataframe
+
+        Returns:
+            str: Formatted section containing the news stories
+        """
         if len(news_stories) == 0:
             logger.debug(f"news_stories: {news_stories}")
             return "Nothing to see here!"
