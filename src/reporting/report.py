@@ -7,7 +7,11 @@ from typing import Dict, List, Optional
 import pandas as pd
 
 from src.config import PATH_TO_LOGS_FOLDER, VERSION
-from src.genai_model.summarizer import Summarizer
+from src.genai_model.summarizer import (
+    Summarizer,
+    SummarizerCompIntel,
+    SummarizerMarketIntel,
+)
 from src.saving.database import Database
 from src.utils.io.text import save_to_text
 from src.utils.list import flatten_list_of_lists
@@ -16,8 +20,9 @@ logger = logging.getLogger(__name__)
 
 
 class Categories(Enum):
-    COMPETTIVE_INTELLIGENCE = "competitive_intelligence"
+    COMPET = "competitive_intelligence"
     THEMES = "themes"
+    MARKET = "market_intelligence"
     FUNDING = "Funding"
     EVALUATION = "Evaluation"
 
@@ -74,78 +79,82 @@ class Report:
             raise KeyError(f"Could not find column {self.score_col} in df_ns.")
         self.debug_mode = debug_mode
 
-    def create_report(
-        self,
-        min_score_threshold: float = 3.0,
-        min_nb_entries: int = 5,
-        min_pct_entries: float = 0.1,
-        path_folder_log: Path = PATH_TO_LOGS_FOLDER,
-    ) -> str:
-        """Create the report in text string. Steps include:
-        1. Filter the candidate news stories according to the inoput parameters
-        2. Log the selected news stories
-        3. Format the candidate news stories into a report
-        4. Log the report
-
-        Args:
-            min_score_threshold (float, optional): Lowest score to be included in report. Defaults to 3.0.
-            min_nb_entries (int, optional): Minimum number of entries in a category to include. Defaults to 5.
-            min_pct_entries (float, optional): Minimum percentage of the total number of entries to include. Defaults to 0.1.
-            path_folder_log (Path, optional): Path to the log folder. Defaults to PATH_TO_LOGS_FOLDER.
+    def create_report(self) -> str:
+        """Create the report in text string. Sections are:
+        1. Competitive Intelligence
+        2. Market Intelligence
+        3. Technology Themes
 
         Returns:
-            str: formatted report in string format
+            str: Formatted report in string format
         """
-        news_stories_for_report = self._filtered_news_stories(
-            min_score_threshold=min_score_threshold,
-            min_nb_entries=min_nb_entries,
-            min_pct_entries=min_pct_entries,
+        # Competitive Intelligence
+        compintel_report = self._build_comp_intel_report(df_ns=self.df_ns)
+        # Market Intelligence
+        marketintel_report = self._build_mkt_intel_report(self.df_ns)
+        # Technology Themes
+        techthemes_report = self._build_techthemes_report(self.df_ns)
+        # format report
+        report_str = (f"\n{SEPARATOR_LONG}\n").join(
+            [compintel_report, marketintel_report, techthemes_report]
         )
-        self._log_df_news_stories_for_report(
-            news_stories_for_report=news_stories_for_report,
-            path_to_log=self.get_path_to_report_log(
-                log_type="df_news_stories",
-                extension="parquet",
-                path_folder=path_folder_log / Path("df_news_stories"),
-            ),
-        )
-        if self.debug_mode:
-            news_stories_for_report["Non-Selected News Stories"] = self.df_ns[
-                ~self.df_ns[COLUMN_INCLUDED_IN_REPORT]
-            ]
-        report_str = self._create_report_from_news_stories(
-            news_stories_for_report=news_stories_for_report
-        )
-        report_path = self.get_path_to_report_log(
-            log_type="report",
-            extension="txt",
-            path_folder=path_folder_log / Path("reports"),
-        )
-        save_to_text(file_path=report_path, content=report_str)
-        logger.info(f"Report in text format was saved to {report_path}")
         return report_str
 
-    def get_path_to_report_log(
-        self, log_type: str, extension: str, path_folder: Path
-    ) -> str:
-        """Path of the file to log
+    def _build_comp_intel_report(self, df_ns: pd.DataFrame) -> str:
+        all_tags = df_ns[Categories.COMPET.value].explode().dropna().unique()
+        summarizer = SummarizerCompIntel()
+        comp_intel_report = ""
+        for tag in all_tags:
+            df_tag = self._get_df_from_tag(df=df_ns, tag=tag)
+            tag_report = self._build_tag_report(df=df_tag, summarizer=summarizer)
+            comp_intel_report += f"\u2022 {tag}: {tag_report}\n"
+        if len(comp_intel_report) == 0:
+            comp_intel_report = "Nothing to see here!"
+        return "COMPETITIVE INTELLIGENCE\n" + comp_intel_report
 
-        Args:
-            log_type (str): type of file to log
-            extension (str): file extension
-            path_folder (Path): path to the log folder
+    def _build_mkt_intel_report(self, df_ns: pd.DataFrame) -> str:
+        # TODO: Fix it to select only the most active companies
+        all_tags = df_ns[Categories.MARKET.value].explode().dropna().unique()
+        summarizer = SummarizerMarketIntel()
+        market_intel_report = ""
+        for tag in all_tags:
+            df_tag = self._get_df_from_tag(df=df_ns, tag=tag)
+            tag_report = self._build_tag_report(df=df_tag, summarizer=summarizer)
+            market_intel_report += f"\u2022 {tag}: {tag_report}\n"
+        return "MARKET INTELLIGENCE\n" + market_intel_report
 
-        Returns:
-            str: path in str format
-        """
-        now = datetime.today()
-        formatted_now = now.strftime("%Y%m%d-%H%M%S")
-        file_name = Path(
-            f"{self.start_date}_{self.end_date}__{log_type}__{formatted_now}__v{VERSION}.{extension}"
-        )
-        path_to_report_log = path_folder
-        path_to_report_log.mkdir(parents=True, exist_ok=True)
-        return path_to_report_log / file_name
+    def _build_techthemes_report(self, df_ns: pd.DataFrame) -> str:
+        # TODO: Fix it to select only the most relevant themes
+        # TODO: make sure that we only include themes when AI&GenAI is also present
+        all_tags = df_ns[Categories.THEMES.value].explode().dropna().unique()
+        summarizer = Summarizer()
+        techthemes_report = ""
+        blacklist_tags = ["AI&GenAI"]
+        for tag in all_tags:
+            if tag not in blacklist_tags:
+                df_tag = self._get_df_from_tag(df=df_ns, tag=tag)
+                tag_report = self._build_tag_report(df=df_tag, summarizer=summarizer)
+                techthemes_report += f"\u2022 {tag}: {tag_report}\n"
+        return "TECHNOLOGY THEMES\n" + techthemes_report
+
+    def _build_tag_report(self, df: pd.DataFrame, summarizer: Summarizer) -> str:
+        if len(df) == 0:
+            tag_report = "Nothing to see here!"
+        else:
+            sources = ""
+            text = ""
+            for nb, idx in enumerate(df.index):
+                ns = df.loc[idx]
+                text += f"{ns['title']} : {ns['news_summary']}\n"
+                sources += f"[{nb+1}] {ns['title']} ({ns['url']})\n"
+            if len(df) == 1:
+                summary = ns["news_summary"]
+                sources_section = "\nSources:\n" + sources
+            else:
+                summary = summarizer.summarize_str(text)
+                sources_section = "Sources:\n" + sources
+            tag_report = summary + sources_section
+        return tag_report
 
     def _build_df_ns(
         self, df_scored_news_stories: Optional[pd.DataFrame], path_to_db: Optional[str]
@@ -198,7 +207,11 @@ class Report:
             KeyError: if a category is missing
         """
         tabs = self.target_fields.keys()
-        for tab in [Categories.COMPETTIVE_INTELLIGENCE.value, Categories.THEMES.value]:
+        for tab in [
+            Categories.COMPET.value,
+            Categories.THEMES.value,
+            Categories.MARKET.value,
+        ]:
             if tab not in tabs:
                 logger.debug(f"Google Sheets has tabs: {tabs}")
                 raise KeyError(f"Missing tab {tab} in the Google Sheets")
@@ -210,64 +223,45 @@ class Report:
                 raise KeyError(f"Missing tab {cat} in the Google Sheets")
         logger.info(f"Target fields were successfully verified.")
 
-    def _filtered_news_stories(
-        self,
-        min_score_threshold: float,
-        min_nb_entries: int,
-        min_pct_entries: float,
-        top_k: int = 3,
-    ) -> Dict[str, pd.DataFrame]:
-        """Select relevant news stories from self.df_ns for the report
+    def _get_df_from_tag(self, df: pd.DataFrame, tag: str) -> pd.DataFrame:
+        """Return the rows of the dataframe that contain a certain theme
 
         Args:
-            min_score_threshold (int): min score required to be selected
-            min_nb_entries (int): min nb of news stories to keep
-            min_pct_entries (float): min percentage of news stories to keep
+            df (pd.DataFrame): dataframe of news stories
+            tag(str): tag to query
 
         Returns:
-            Dict[str, pd.DataFrame]: selected news stories from self.df_ns for each section of the report
-                sections are "competitive_intelligence", "themes", "funding", "evaluation"
+            pd.DataFrame: slice of the input dataframe, df, corresponding only to the entries that contain that theme
         """
-        # Validate input arguments
-        if not (0 < min_pct_entries < 1.0):
-            raise ValueError(
-                f"Received wrong input argument min_pct_entries = {min_pct_entries}"
-            )
-        # Filter: only keep entries with non-zero score
-        df_nonzero = self.df_ns[self.df_ns[self.score_col] > 0.0]
-        news_stories_for_report = {}
-        # Section: competitive intelligence
-        news_stories_for_report[Categories.COMPETTIVE_INTELLIGENCE.name] = df_nonzero[
-            df_nonzero[Categories.COMPETTIVE_INTELLIGENCE.value].apply(lambda x: len(x))
-            > 0
-        ]
-        # Section: funding; evaluation
-        for cat in [Categories.FUNDING, Categories.EVALUATION]:
-            news_stories_for_report[cat.name] = df_nonzero[
-                df_nonzero[Categories.THEMES.value].apply(lambda x: cat.value in x)
-            ]
-        # Section: Themes
-        df_min_score = self._get_df_min_score(
-            df_nonzero=df_nonzero,
-            min_pct_entries=min_pct_entries,
-            min_nb_entries=min_nb_entries,
-            min_score_threshold=min_score_threshold,
+        themes_exploded = (
+            df[Categories.COMPET.value]
+            + df[Categories.THEMES.value]
+            + df[Categories.MARKET.value]
+        ).explode()
+        idx = themes_exploded[themes_exploded == tag].index
+        return df.loc[idx]
+
+    def get_path_to_report_log(
+        self, log_type: str, extension: str, path_folder: Path
+    ) -> str:
+        """Path of the file to log
+
+        Args:
+            log_type (str): type of file to log
+            extension (str): file extension
+            path_folder (Path): path to the log folder
+
+        Returns:
+            str: path in str format
+        """
+        now = datetime.today()
+        formatted_now = now.strftime("%Y%m%d-%H%M%S")
+        file_name = Path(
+            f"{self.start_date}_{self.end_date}__{log_type}__{formatted_now}__v{VERSION}.{extension}"
         )
-        themes_to_exclude = ["AI&GenAI", "Model", "Funding", "Evaluation"]
-        leading_themes = self._top_k_themes(
-            df=df_min_score, k=top_k, themes_to_exclude=themes_to_exclude
-        )
-        for theme in leading_themes:
-            # Select all news stories related to that themes and that have a non-zero score
-            news_stories_for_report[f"{Categories.THEMES.name}-{theme}"] = (
-                self._get_df_from_theme(df_nonzero, theme)
-            )
-        idx_so_far = self._get_idx_from_dict_of_df(news_stories_for_report)
-        idx_other = df_min_score.index.difference(idx_so_far)
-        news_stories_for_report[f"{Categories.THEMES.name}-Other"] = df_min_score.loc[
-            idx_other
-        ]
-        return news_stories_for_report
+        path_to_report_log = path_folder
+        path_to_report_log.mkdir(parents=True, exist_ok=True)
+        return path_to_report_log / file_name
 
     def _log_df_news_stories_for_report(
         self, news_stories_for_report: Dict[str, pd.DataFrame], path_to_log: str
@@ -282,32 +276,6 @@ class Report:
         self.df_ns.to_parquet(path=path_to_log)
         logger.info(f"df_ns saved to {path_to_log}")
 
-    def _create_report_from_news_stories(
-        self, news_stories_for_report: Dict[str, pd.DataFrame]
-    ) -> str:
-        """Create the report in string format from the candidate news stories
-
-        Args:
-            news_stories_for_report (Dict[str, pd.DataFrame]): candidate news stories
-
-        Returns:
-            str: formatted report in string format
-        """
-        next_line = "\n\n" + SEPARATOR_LONG + "\n\n"
-        summarizer = Summarizer()
-        report = ""
-        for section_title, df_section in news_stories_for_report.items():
-            formatted_section = self._format_section(df_section)
-            if len(df_section) > 1:
-                response = summarizer.summarize(formatted_section)
-                summary = summarizer.get_content_from_response(response)
-                section_content = f"Summary: {summary}\n" + formatted_section
-            else:
-                section_content = formatted_section
-            report += f"# {section_title}\n" + section_content
-            report += next_line
-        return report
-
     def _get_idx_from_dict_of_df(self, dict_df: Dict[str, pd.DataFrame]) -> List[int]:
         """Get all the indices from multiple dataframes stored in a dict[str, pd.Dataframe]
 
@@ -318,46 +286,6 @@ class Report:
             List[int]: List of indices
         """
         return list(set(flatten_list_of_lists([df.index for df in dict_df.values()])))
-
-    def _get_df_min_score(
-        self,
-        df_nonzero: pd.DataFrame,
-        min_pct_entries: float,
-        min_nb_entries: int,
-        min_score_threshold: float,
-    ) -> pd.DataFrame:
-        """Find minimum score corresponding to most conservative of min_nb_entries and min_pct_entries
-
-        Args:
-            df_nonzero (pd.DataFrame): filtered dataframe of news stories
-
-        Returns:
-            pd.DataFrame: df filtered according to self.params
-        """
-        df_sorted_news_stories = df_nonzero.sort_values(self.score_col, ascending=False)
-        min_pct_entries_in_nb = int(len(df_sorted_news_stories) * min_pct_entries)
-        min_entries = max(min_nb_entries, min_pct_entries_in_nb)
-        score_min_entries = df_sorted_news_stories.iloc[min_entries - 1][self.score_col]
-        logger.debug(
-            f"min_nb_entries={min_nb_entries}, "
-            + f"min_pct_entries_in_db={min_pct_entries_in_nb}, "
-            + f"min_entries={min_entries}, "
-            + f"score_min_entries={score_min_entries}"
-        )
-        logger.debug(df_sorted_news_stories.iloc[min_entries - 1])
-        if score_min_entries < min_score_threshold:
-            logger.warning(
-                f"The score to maintain a minimum "
-                + f"number of entries is {score_min_entries}, "
-                + f"which is less than the "
-                + f"target threshold {min_score_threshold}."
-            )
-            min_score = score_min_entries
-        else:
-            min_score = min_score_threshold
-        return df_sorted_news_stories[
-            df_sorted_news_stories[self.score_col] >= min_score
-        ]
 
     def _top_k_themes(
         self, df: pd.DataFrame, k: int = 3, themes_to_exclude: List[str] = []
@@ -382,41 +310,3 @@ class Report:
             if theme not in themes_to_exclude and ranked_themes.loc[theme].item() > 1:
                 top_k_themes.append(theme)
         return top_k_themes
-
-    def _get_df_from_theme(self, df: pd.DataFrame, theme: str) -> pd.DataFrame:
-        """Return the rows of the dataframe that contain a certain theme
-
-        Args:
-            df (pd.DataFrame): dataframe of news stories
-            theme (str): theme to query
-
-        Returns:
-            pd.DataFrame: slice of the input dataframe, df, corresponding only to the entries that contain that theme
-        """
-        themes_exploded = (df["themes"] + df["market_intelligence"]).explode()
-        idx = themes_exploded[themes_exploded == theme].index
-        return df.loc[idx]
-
-    def _format_section(self, news_stories: pd.DataFrame) -> str:
-        """Format a section of the report, given all news stories in a dataframe
-
-        Args:
-            news_stories (pd.DataFrame): news stories all grouped into a dataframe
-
-        Returns:
-            str: Formatted section containing the news stories
-        """
-        if len(news_stories) == 0:
-            logger.debug(f"news_stories: {news_stories}")
-            return "Nothing to see here!"
-        else:
-            out = ""
-            for idx in news_stories.index:
-                ns = news_stories.loc[idx]
-                tags = ns[COL_TAGS].sum()
-                out += (
-                    f"\u2022 {ns['title']} ({ns['url']}):\n"
-                    + f"\tScore: {ns[self.score_col]} (tags: {tags})\n"
-                    + f"\tSummary: {ns['news_summary']}\n"
-                )
-            return out
