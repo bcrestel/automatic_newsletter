@@ -18,6 +18,7 @@ pyarrow
 
 spacy
 inflect
+emoji
 
 google-generativeai
 groq

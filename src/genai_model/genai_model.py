@@ -46,7 +46,7 @@ class GenAIModel:
 
     @staticmethod
     def get_content_from_response(
-        response: Union[ModelResponse, CustomStreamWrapper]
+        response: Union[ModelResponse, CustomStreamWrapper],
     ) -> str:
         return response["choices"][0].message.content
 

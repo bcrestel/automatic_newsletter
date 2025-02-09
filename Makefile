@@ -17,6 +17,7 @@ TEST_FOLDER = src/tests
 FORMAT_FOLDER = src
 DOCKER_RUN = docker run -it --entrypoint=bash $(LOAD_ENV) -e TZ=America/New_York -w /home -v $(PWD):/home/
 DOCKER_IMAGE = $(IMAGE_NAME):$(IMAGE_TAG)
+DOCKER_IMAGE_PIPTOOLS = piptools:latest # NOTE: this image should already exist
 ###################
 
 #

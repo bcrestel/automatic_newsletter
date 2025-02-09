@@ -47,7 +47,8 @@ def tldr_parser(email: Email) -> List[NewsStory]:
             ii = ii + 1
 
     # Build mapping from reference number to url's:
-    links = list_text[-1].split("\r\n")
+    all_links = list_text[-1]
+    links = all_links.split("\r\n")
     map_ref_to_url = {}
     for ll in links:
         if ll.startswith("["):
