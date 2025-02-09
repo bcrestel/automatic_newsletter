@@ -148,11 +148,12 @@ class Report:
                 text += f"{ns['title']} : {ns['news_summary']}\n"
                 sources += f"[{nb+1}] {ns['title']} ({ns['url']})\n"
             if len(df) == 1:
-                summary = ns["news_summary"]
-                sources_section = "\nSources:\n" + sources
+                summary = ns["news_summary"].rstrip("\n")
             else:
-                summary = summarizer.summarize_str(text)
-                sources_section = "Sources:\n" + sources
+                response = summarizer.summarize(text)
+                summary = summarizer.get_content_from_response(response).rstrip("\n")
+                summary += f" (summary provided by {response['model']})"
+            sources_section = "\nSources:\n" + sources
             tag_report = summary + sources_section
         return tag_report
 
