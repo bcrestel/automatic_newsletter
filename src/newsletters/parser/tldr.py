@@ -23,7 +23,7 @@ def tldr_parser(email: Email) -> List[NewsStory]:
     Returns:
         List[NewsStory]: List of NewStory objects extracted from email
     """
-    logger.debug(f"Parsing email: {email['subject']}")
+    logger.info(f"Parsing email '{email['subject']}'")
     list_text = email["text"].split(SPLIT_PATTERN)
     news_stories = []
     ii = 0

@@ -20,6 +20,15 @@ SPLIT_PATTERN = "\r\n\r\n \t*\r\n"
 
 
 def alpha_signal_parser(email: Email) -> List[NewsStory]:
+    """Parser for the AlphaSignal newsletter
+
+    Args:
+        email (Email): AlphaSignal email
+
+    Returns:
+        List[NewsStory]: List of NewStory objects extracted from email
+    """
+    logger.info(f"Parsing email '{email['subject']}'")
     txt = email["text"]
     sections = []
     for sec in SECTIONS:
