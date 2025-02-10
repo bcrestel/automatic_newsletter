@@ -7,9 +7,11 @@ from src.genai_model.genai_model import GenAIModel
 
 
 class Summarizer:
-    def __init__(self, parameters={"temperature": 0.2, "top_p": 0.5}):
+    def __init__(
+        self, parameters={"temperature": 0.2, "top_p": 0.5}, model_type: str = "large"
+    ):
         system_prompt = self._generate_system_prompt()
-        self.summarizer = GenAIModel(model_type="large", system_promt=system_prompt)
+        self.summarizer = GenAIModel(model_type=model_type, system_promt=system_prompt)
         self.parameters = parameters
 
     #    @staticmethod
@@ -73,8 +75,10 @@ Here is the list of news articles that I want you to use to create your newslett
 
 
 class SummarizerCompIntel(Summarizer):
-    def __init__(self, parameters={"temperature": 0.2, "top_p": 0.5}):
-        super().__init__(parameters)
+    def __init__(
+        self, parameters={"temperature": 0.2, "top_p": 0.5}, model_type: str = "large"
+    ):
+        super().__init__(parameters=parameters, model_type=model_type)
 
     def _generate_system_prompt(self) -> str:
         return """
@@ -108,8 +112,10 @@ Here is the list of news articles that I want you to use to create your newslett
 
 
 class SummarizerMarketIntel(Summarizer):
-    def __init__(self, parameters={"temperature": 0.2, "top_p": 0.5}):
-        super().__init__(parameters)
+    def __init__(
+        self, parameters={"temperature": 0.2, "top_p": 0.5}, model_type: str = "large"
+    ):
+        super().__init__(parameters=parameters, model_type=model_type)
 
     def _generate_system_prompt(self) -> str:
         return """
