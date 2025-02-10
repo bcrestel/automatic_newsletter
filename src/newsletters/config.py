@@ -6,4 +6,6 @@ from src.newsletters.parser.tldr import tldr_parser
 NEWSLETTER_AND_PARSER = {
     "TLDR AI <dan@tldrnewsletter.com>": tldr_parser,
     "AlphaSignal <news@alphasignal.ai>": alpha_signal_parser,
+    "TLDR <dan@tldrnewsletter.com>": tldr_parser,
+    "TLDR Product <dan@tldrnewsletter.com>": tldr_parser,
 }
