@@ -27,7 +27,7 @@ class GenAIModel:
     ) -> Union[ModelResponse, CustomStreamWrapper]:
         for model in self.list_of_models:
             try:
-                return litellm_completion(
+                response = litellm_completion(
                     model=model,
                     messages=[
                         {"role": "system", "content": self.system_prompt},
@@ -35,6 +35,10 @@ class GenAIModel:
                     ],
                     **parameters,
                 )
+                if self._check_model_response_ok(response):
+                    return response
+                else:
+                    raise ValueError(f"Problem with the response of model {model}.")
             except Exception as e:
                 logger.warning(f"Model {model} raised an Exception.")
                 logger.debug(e)
@@ -52,6 +56,16 @@ class GenAIModel:
 
     def get_all_model_types(self):
         return self.models_catalog.keys()
+
+    def _check_model_response_ok(
+        self, response: Union[ModelResponse, CustomStreamWrapper]
+    ) -> bool:
+        if response is not None:
+            content = self.get_content_from_response(response)
+            if content is not None and len(content) > 0:
+                return True
+        else:
+            return False
 
     def _map_model_type_to_model_names(self, model_type: str) -> List[str]:
         """Collect the list of models specified by model_type. This can be done in 3 different ways:
