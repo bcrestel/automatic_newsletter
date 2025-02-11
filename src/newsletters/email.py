@@ -7,3 +7,4 @@ class Email(TypedDict):
     date_utc: str
     id: str
     text: str
+    message: dict

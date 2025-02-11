@@ -41,12 +41,21 @@ class Gmail:
         Returns:
             List[Email]: list of Email objects
         """
+        messages = self._fetch_messages(sender=sender, after=after, before=before)
+        emails = [
+            self._create_email_from_message(message=message) for message in messages
+        ]
+        return [email for email in emails if email["sender"] == sender]
+
+    def _fetch_messages(
+        self, sender: str, after: str = "1900-12-31", before: str = "2100-12-31"
+    ) -> List[dict]:
         logger.debug(f"Fetch email for sender {sender} from {after} until {before}.")
         after_int = self._convert_to_unix_time(after + " 00:00:00")
         before_int = self._convert_to_unix_time(before + " 23:59:59")
         query = f"after:{after_int} before:{before_int} from:{sender}"
         try:
-            results = self._get_messages(query=query)
+            results = self._list_messages(query=query)
         except RefreshError as e:
             logger.warning("Your Google token has expired.")
             recreate_token(
@@ -55,12 +64,9 @@ class Gmail:
                 scopes=self.scopes,
             )
             self.service = self._create_services()
-            results = self._get_messages(query=query)
+            results = self._list_messages(query=query)
         messages = results.get("messages", [])
-        emails = [
-            self._create_email_from_message(message=message) for message in messages
-        ]
-        return [email for email in emails if email["sender"] == sender]
+        return messages
 
     def send_email(self, sender: str, recipient: str, subject: str, body: str) -> None:
         # Create the message
@@ -92,8 +98,11 @@ class Gmail:
         dt = datetime.strptime(date_time, "%Y-%m-%d %H:%M:%S")
         return int(dt.timestamp())
 
-    def _get_messages(self, query: str):
+    def _list_messages(self, query: str):
         return self.service.users().messages().list(userId="me", q=query).execute()
+
+    def _get_message(self, email_id: str):
+        return self.service.users().messages().get(userId="me", id=email_id).execute()
 
     def _create_services(self):
         creds = Credentials.from_authorized_user_file(
@@ -103,9 +112,7 @@ class Gmail:
 
     def _create_email_from_message(self, message: dict) -> Email:
         email_id = message["id"]
-        message = (
-            self.service.users().messages().get(userId="me", id=email_id).execute()
-        )
+        message = self._get_message(email_id=email_id)
         headers = message["payload"]["headers"]
         return Email(
             sender=next(
@@ -119,6 +126,7 @@ class Gmail:
             ),
             id=email_id,
             text=self._get_text_from_message(message=message),
+            message=message,
         )
 
     def _get_text_from_message(self, message: dict) -> str:

@@ -4,7 +4,7 @@ from typing import List
 
 import emoji
 
-from src.genai_model.summarizer import Summarizer
+from src.genai_model.genai_model import GenAIModel
 from src.news_story import NewsStory
 from src.newsletters.email import Email
 from src.newsletters.parser.process_links import replace_link_numbers_with_url
@@ -55,8 +55,10 @@ def alpha_signal_parser(email: Email) -> List[NewsStory]:
             )
             if section_idx == 0 and len(articles) == 2:
                 ns["text"] = get_text_for_top_news(email["text"])
-                summarizer = Summarizer(model_type="small")
-                summary = summarizer.summarize_str(f"{ns['title']} : {ns['text']}")
+                summarizer = GenAIModel(model_type="small")
+                summary = summarizer.completion_str(
+                    f"Summarize the following article: {ns['text']}"
+                )
                 ns["news_summary"] = summary.strip()
             news_stories.append(ns)
     # Replace reference numbers by actual url
