@@ -79,11 +79,17 @@ class Report:
             raise KeyError(f"Could not find column {self.score_col} in df_ns.")
         self.debug_mode = debug_mode
 
-    def create_report(self) -> str:
+    def create_report(
+        self, path_folder_log: Optional[Path] = PATH_TO_LOGS_FOLDER
+    ) -> str:
         """Create the report in text string. Sections are:
         1. Competitive Intelligence
         2. Market Intelligence
         3. Technology Themes
+
+        Args:
+            path_folder_log: root directory for the logs/ folder
+                If set to None, no saving credit
 
         Returns:
             str: Formatted report in string format
@@ -98,6 +104,14 @@ class Report:
         report_str = (f"\n{SEPARATOR_LONG}\n").join(
             [compintel_report, marketintel_report, techthemes_report]
         )
+        # save report to disk
+        if path_folder_log is not None:
+            report_path = self.get_path_to_report_log(
+                log_type="report",
+                extension="txt",
+                path_folder=path_folder_log / Path("reports"),
+            )
+            save_to_text(file_path=report_path, content=report_str)
         return report_str
 
     def _build_comp_intel_report(self, df_ns: pd.DataFrame) -> str:

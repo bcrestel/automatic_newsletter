@@ -11,9 +11,9 @@ if __name__ == "__main__":
     end_date = add_days_str(today_date, -1)
     runner_pipeline(
         report_date_range=[start_date, end_date],
-        path_to_db=PATH_TO_DB,
+        path_to_db=False,  # path_to_db=PATH_TO_DB,
         create_report=True,
-        save_db=True,
+        save_db=False,  # save_db=True,
         parse_news_stories=True,
     )
     save_to_text(REPORT_DATE_PATH, end_date + "\n", open_mode="a")

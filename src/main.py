@@ -26,8 +26,12 @@ def runner_pipeline(
 
     Args:
         report_date_range (List[str]): start and end date, eg ["2024-12-01", "2024-12-09"].
-        Start date is set to midnight (so inclusive).
-        End date is set to 23:59:59 (so inclusive too).
+            Start date is set to midnight (so inclusive).
+            End date is set to 23:59:59 (so inclusive too).
+        path_to_db (str): path to database where news stories are logged
+        create_report (bool): if True, will create a report
+        save_db (bool): if True, will save to db (at path_to_db)
+        parse_news_stories (bool): if True, will fetch and parse new newstories
     """
     if not parse_news_stories and not create_report:
         logger.warning(
