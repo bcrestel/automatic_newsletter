@@ -1,7 +1,11 @@
+import logging
 from typing import Any
 
 import requests
 from furl import furl
+from requests.exceptions import ConnectionError
+
+logger = logging.getLogger(__name__)
 
 TRACKERS = [
     # Google Analytics: https://support.google.com/analytics/answer/10917952#zippy=%2Cin-this-article
@@ -28,8 +32,14 @@ def expand_url(short_url: str) -> str:
     Returns:
         str: expanded url
     """
-    response = requests.head(short_url, allow_redirects=True)
-    expanded_url = response.url
+    try:
+        response = requests.head(short_url, allow_redirects=True)
+        expanded_url = response.url
+    except ConnectionError as e:
+        logger.warning(
+            f"requests.head failed for url {short_url}. Keeping the original url."
+        )
+        expanded_url = short_url
     return expanded_url
 
 
