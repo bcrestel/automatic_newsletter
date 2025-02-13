@@ -1,5 +1,5 @@
 import logging
-from typing import List
+from typing import List, Tuple
 
 from src.news_story import NewsStory
 from src.utils.web.url import expand_url, remove_trackers
@@ -37,14 +37,28 @@ def replace_link_numbers_with_url(
     for ns in news_stories:
         ref_nb = ns["url"]
         raw_url = map_ref_to_url[ref_nb]
-        try:
-            expanded_url = expand_url(raw_url)
-            clean_furl = remove_trackers(expanded_url)
-            ns["url"] = clean_furl.url
-            ns["news_provider"] = clean_furl.host
-        except:
-            logger.error(
-                f"Could not expand url {raw_url}. Please try again manually later."
-            )
-            ns["url"] = raw_url
-            ns["news_provider"] = "Not available"
+        url, news_provider = process_raw_url(raw_url=raw_url)
+        ns["url"] = url
+        ns["news_provider"] = news_provider
+
+
+def process_raw_url(raw_url: str) -> Tuple[str, str]:
+    """Takes an url, potentially shortened, masked, and/or containing tackers,
+    and return its clean version (direct link to the page) and its host
+
+    Args:
+        raw_url (str): string of the url to clean up
+
+    Returns:
+        Tuple[str, str]: the clean url, the hsot of that url
+    """
+    try:
+        expanded_url = expand_url(raw_url)
+        clean_furl = remove_trackers(expanded_url)
+        url = clean_furl.url
+        host = clean_furl.host
+    except:
+        logger.warning(f"Could not process url: {raw_url}. Will keep the original one.")
+        url = raw_url
+        host = "Not available"
+    return url, host

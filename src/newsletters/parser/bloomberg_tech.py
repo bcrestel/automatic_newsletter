@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 from src.genai_model.genai_model import GenAIModel
 from src.news_story import NewsStory
 from src.newsletters.email import Email
-from src.utils.web.url import expand_url, remove_trackers
+from src.newsletters.parser.process_links import process_raw_url
 
 logger = logging.getLogger(__name__)
 
@@ -38,27 +38,49 @@ def bloomberg_tech_parser(email: Email) -> List[NewsStory]:
         txt = _tmp[1]
     sections = sections[1:]
     news_stories = []
-    url_idx = 0
-    url_dict = {}
+    # Get the url's
+    message = email["message"]
+    for pp in message["payload"]["parts"]:
+        if pp["mimeType"] == "text/html":
+            body_data = pp["body"]["data"]
+            text_html = base64.urlsafe_b64decode(body_data).decode()
+            break
+    urls = re.findall(
+        r"\(https://[^\)]+\)",
+        html_to_text_with_links(text_html).split(SECTIONS[0])[1].split(SECTIONS[-1])[0],
+    )
+    logger.debug(f"Found {len(urls)} url's in the article '{email['subject']}'.")
+    logger.debug(f"url's: [{urls}]")
     for section in sections:
         articles = section.split(SPLIT_PATTERN)
         for art in articles:
+            insert_url = True if "<>" in art else False
             txt = art.replace("\n", "").strip()
-            url_dict[url_idx] = txt.split("<>")[0]
             txt = txt.replace("<>", "")
             if len(txt) > 0:
                 if ": " in txt:
                     title, summary = txt.split(":")
                 else:
                     logger.debug(txt)
-                    title_creator = GenAIModel(model_type="small")
+                    title_creator = GenAIModel(
+                        model_type="small",
+                        system_promt="You are journalist specialized in technology and artificial intelligence.",
+                    )
                     title = title_creator.completion_str(
-                        user_prompt=f"Create a title for the following summary of a news article: {txt}"
+                        user_prompt=f"Create a title for a news article given a summary of that news article.\nOnly return the title and only return a single title.\nHere is the summary:\n{txt}"
                     )
                     summary = txt
+                # Extract url
+                if insert_url:
+                    raw_url = urls.pop(0).lstrip("(").rstrip(")")
+                    url, news_provider = process_raw_url(raw_url=raw_url)
+                else:
+                    url = ""
+                    news_provider = "Not available"
                 ns = NewsStory(
                     title=title.strip(),
-                    url=url_idx,
+                    url=url,
+                    news_provider=news_provider,
                     source_of_the_news=email["sender"],
                     text="",
                     news_summary=summary.strip(),
@@ -66,24 +88,9 @@ def bloomberg_tech_parser(email: Email) -> List[NewsStory]:
                     date_source_time_zone="utc",
                 )
                 news_stories.append(ns)
-                url_idx += 1
-    # TODO: add url to news_stories
-    # Get the url
-    message = email["message"]
-    for pp in message["payload"]["parts"]:
-        if pp["mimeType"] == "text/html":
-            body_data = pp["body"]["data"]
-            text_html = base64.urlsafe_b64decode(body_data).decode()
-    urls = re.findall(
-        r"\(https://[^\)]+\)",
-        html_to_text_with_links(text_html).split(SECTIONS[0])[1].split(SECTIONS[-1])[0],
+    logger.debug(
+        f"Found {len(news_stories)} news stories in the article: {email['subject']}."
     )
-    for ns in news_stories:
-        raw_url = urls[ns["url"]].lstrip("(").rstrip(")")
-        expanded_url = expand_url(raw_url)
-        clean_furl = remove_trackers(expanded_url)
-        ns["url"] = clean_furl.url
-        ns["news_provider"] = clean_furl.host
     return news_stories
 
 

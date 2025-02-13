@@ -10,7 +10,7 @@ SCOPES = [
     "https://www.googleapis.com/auth/gmail.send",
 ]
 
-VERSION = "1.2.2"
+VERSION = "1.2.3"
 
 PATH_TO_LOGS_FOLDER = Path("/home/logs")
 PATH_TO_DB = PATH_TO_LOGS_FOLDER / Path("database_news_stories.parquet")
