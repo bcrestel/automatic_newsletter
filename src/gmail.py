@@ -105,9 +105,20 @@ class Gmail:
         return self.service.users().messages().get(userId="me", id=email_id).execute()
 
     def _create_services(self):
-        creds = Credentials.from_authorized_user_file(
-            filename=self.path_to_token, scopes=self.scopes
-        )
+        try:
+            creds = Credentials.from_authorized_user_file(
+                filename=self.path_to_token, scopes=self.scopes
+            )
+        except FileNotFoundError as e:
+            logger.warning(e)
+            recreate_token(
+                path_to_token=self.path_to_token,
+                path_to_credentials=self.path_to_credentials,
+                scopes=self.scopes,
+            )
+            creds = Credentials.from_authorized_user_file(
+                filename=self.path_to_token, scopes=self.scopes
+            )
         return build("gmail", "v1", credentials=creds)
 
     def _create_email_from_message(self, message: dict) -> Email:

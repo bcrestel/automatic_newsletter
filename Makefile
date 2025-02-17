@@ -54,7 +54,7 @@ run: build
 .PHONY : shell
 shell: build
 	$(info ***** Creating shell *****)
-	$(DOCKER_RUN) $(DOCKER_IMAGE)
+	$(DOCKER_RUN) -p 8080:8080 $(DOCKER_IMAGE)
 
 .PHONY : ipython
 ipython: build
