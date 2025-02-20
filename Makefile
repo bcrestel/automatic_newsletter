@@ -15,7 +15,9 @@ LOAD_ENV = --env OPENAI_API_KEY=$(OPENAI_API_KEY) \
 # FIXED PARAMETERS
 TEST_FOLDER = src/tests
 FORMAT_FOLDER = src
-DOCKER_RUN = docker run -it --entrypoint=bash $(LOAD_ENV) -e TZ=America/New_York -w /home -v $(PWD):/home/
+DOCKER_RUN_OPTIONS = --entrypoint=bash $(LOAD_ENV) -e TZ=America/New_York -w /home -v $(PWD):/home/
+DOCKER_RUN = docker run -it $(DOCKER_RUN_OPTIONS)
+DOCKER_RUN_BARE = docker run $(DOCKER_RUN_OPTIONS)
 DOCKER_IMAGE = $(IMAGE_NAME):$(IMAGE_TAG)
 DOCKER_IMAGE_PIPTOOLS = piptools:latest # NOTE: this image should already exist
 ###################
@@ -50,6 +52,11 @@ upgrade:
 run: build
 	$(info ***** Running *****)
 	$(DOCKER_RUN) $(DOCKER_IMAGE) -c "python src/generate_report_from_last_time.py"
+
+.PHONY : run_crontab
+run_crontab: build
+	$(info ***** Running *****)
+	$(DOCKER_RUN_BARE) $(DOCKER_IMAGE) -c "python src/generate_report_from_last_time.py"
 
 .PHONY : shell
 shell: build
