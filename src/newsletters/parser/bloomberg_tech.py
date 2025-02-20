@@ -12,10 +12,12 @@ from src.newsletters.parser.process_links import process_raw_url
 
 logger = logging.getLogger(__name__)
 
-SECTIONS = [
+SECTION_BREAKS = [
     "Tech Across the Globe",
     "Revalued",
     "Must read",
+    "Today’s must read",
+    "More from Bloomberg",
 ]
 SPLIT_PATTERN = "\n\n"
 
@@ -32,12 +34,25 @@ def bloomberg_tech_parser(email: Email) -> List[NewsStory]:
     logger.info(f"Parsing email '{email['subject']}'")
     txt = email["text"]
     sections = []
-    for sec in SECTIONS:
+    for sec in SECTION_BREAKS:
         _tmp = txt.split(sec)
+        if len(_tmp) == 1:
+            logger.warning(f"Could not find keyword '{sec}' and therefore couldn't split. Skipping")
+            continue
+        elif len(_tmp) > 2:
+            logger.error(f"Should have gotten 2 pieces, instead got {len(_tmp)}.")
+            logger.error(f"Original text to split: {txt}")
+            raise ValueError(f"Error while splitting the text for section: '{sec}'.")
+        logger.debug(f"section: {sec}, added text: {_tmp[0]}, original: {_tmp}")
         sections.append(_tmp[0])
-        txt = _tmp[1]
+        # Handle the last section
+        if sec == "Must read" or sec == "Today’s must read":
+            logger.debug(f"Finishing sections with: {_tmp[1]}")
+            sections.append(_tmp[1].lstrip().split(SPLIT_PATTERN)[0])
+            break
+        else:
+            txt = _tmp[1]
     sections = sections[1:]
-    news_stories = []
     # Get the url's
     message = email["message"]
     for pp in message["payload"]["parts"]:
@@ -47,10 +62,11 @@ def bloomberg_tech_parser(email: Email) -> List[NewsStory]:
             break
     urls = re.findall(
         r"\(https://[^\)]+\)",
-        html_to_text_with_links(text_html).split(SECTIONS[0])[1].split(SECTIONS[-1])[0],
+        html_to_text_with_links(text_html).split(SECTION_BREAKS[0])[1].split(SECTION_BREAKS[-1])[0],
     )
     logger.debug(f"Found {len(urls)} url's in the article '{email['subject']}'.")
     logger.debug(f"url's: [{urls}]")
+    news_stories = []
     for section in sections:
         articles = section.split(SPLIT_PATTERN)
         for art in articles:
