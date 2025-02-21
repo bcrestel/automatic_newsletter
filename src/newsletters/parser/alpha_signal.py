@@ -37,16 +37,6 @@ def alpha_signal_parser(email: Email) -> List[NewsStory]:
     for line in lines:
         if "\t*\r" in line and re.search(r"\[\d+\]", line):
             txt = line.lstrip(" \t*\r\n").replace("\r\n", " ").strip()
-            #    sections = []
-            #    for sec in SECTIONS:
-            #        _tmp = txt.split(sec)
-            #        sections.append(_tmp[0])
-            #        txt = _tmp[1]
-            #    sections = sections[1:]
-            #    for section_idx, section in enumerate(sections):
-            #        articles = section.split(SPLIT_PATTERN)
-            #        for art in articles[1:]:
-            #            txt = emoji.replace_emoji(art, replace="").replace("\r\n", " ").strip()
             ns = NewsStory(
                 title=txt.split("[")[0].strip(),
                 url=txt.split("[")[1].split("]")[0],

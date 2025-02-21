@@ -37,7 +37,9 @@ def bloomberg_tech_parser(email: Email) -> List[NewsStory]:
     for sec in SECTION_BREAKS:
         _tmp = txt.split(sec)
         if len(_tmp) == 1:
-            logger.warning(f"Could not find keyword '{sec}' and therefore couldn't split. Skipping")
+            logger.warning(
+                f"Could not find keyword '{sec}' and therefore couldn't split. Skipping"
+            )
             continue
         elif len(_tmp) > 2:
             logger.error(f"Should have gotten 2 pieces, instead got {len(_tmp)}.")
@@ -62,7 +64,9 @@ def bloomberg_tech_parser(email: Email) -> List[NewsStory]:
             break
     urls = re.findall(
         r"\(https://[^\)]+\)",
-        html_to_text_with_links(text_html).split(SECTION_BREAKS[0])[1].split(SECTION_BREAKS[-1])[0],
+        html_to_text_with_links(text_html)
+        .split(SECTION_BREAKS[0])[1]
+        .split(SECTION_BREAKS[-1])[0],
     )
     logger.debug(f"Found {len(urls)} url's in the article '{email['subject']}'.")
     logger.debug(f"url's: [{urls}]")
