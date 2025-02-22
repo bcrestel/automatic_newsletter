@@ -66,6 +66,7 @@ To produce the summaries, I want you to follow these steps:
 3. Combine the summaries of all categories together.
 
 You must only return the output from step 3, not the intermediate steps (steps 1 and 2).
+You must only return the summary, don't start with any introductory sentence.
 
 Each news article follows the same format:
 <TITLE> : <MAIN TEXT>
@@ -103,6 +104,7 @@ To produce the summaries, I want you to follow these steps:
 3. Combine the summaries of all categories together.
 
 You must only return the output from step 3, not the intermediate steps (steps 1 and 2).
+You must only return the summary, don't start with any introductory sentence.
 
 Each news article follows the same format:
 <TITLE> : <MAIN TEXT>
@@ -140,6 +142,7 @@ To produce the summaries, I want you to follow these steps:
 3. Combine the summaries of all categories together.
 
 You must only return the output from step 3, not the intermediate steps (steps 1 and 2).
+You must only return the summary, don't start with any introductory sentence.
 
 Each news article follows the same format:
 <TITLE> : <MAIN TEXT>
