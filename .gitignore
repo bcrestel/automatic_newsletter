@@ -11,3 +11,4 @@ secrets_vault/*
 *.png
 *DS_Store*
 *.pyc
+logs/*

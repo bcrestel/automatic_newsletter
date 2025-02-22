@@ -4,6 +4,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict, List, Optional
 
+import markdown
 import pandas as pd
 
 from src.config import PATH_TO_LOGS_FOLDER, VERSION
@@ -27,8 +28,6 @@ class Categories(Enum):
     EVALUATION = "Evaluation"
 
 
-SEPARATOR_LONG = "=" * 60 + "\n"
-SEPARATOR_SHORT = "=" * 20 + "\n"
 COL_TAGS = [
     "competitive_intelligence",
     "themes",
@@ -94,6 +93,13 @@ class Report:
         Returns:
             str: Formatted report in string format
         """
+        report_md = self._create_report_md(path_folder_log=path_folder_log)
+        report_html = self._convert_md_to_html(report_md)
+        return report_html
+
+    def _create_report_md(
+        self, path_folder_log: Optional[Path] = PATH_TO_LOGS_FOLDER
+    ) -> str:
         # Competitive Intelligence
         compintel_report = self._build_comp_intel_report(df_ns=self.df_ns)
         # Market Intelligence
@@ -101,9 +107,10 @@ class Report:
         # Technology Themes
         techthemes_report = self._build_techthemes_report(self.df_ns)
         # format report
-        report_str = (f"\n{SEPARATOR_LONG}\n").join(
+        report_md = (f"\n\n***\n\n").join(
             [compintel_report, marketintel_report, techthemes_report]
         )
+        report_md = "[TOC]" + "\n" * 4 + report_md
         # save report to disk
         if path_folder_log is not None:
             report_path = self.get_path_to_report_log(
@@ -111,8 +118,13 @@ class Report:
                 extension="txt",
                 path_folder=path_folder_log / Path("reports"),
             )
-            save_to_text(file_path=report_path, content=report_str)
-        return report_str
+            save_to_text(file_path=report_path, content=report_md)
+        return report_md
+
+    def _convert_md_to_html(self, txt_md: str) -> str:
+        md = markdown.Markdown(extensions=["toc"])
+        txt_html = md.convert(txt_md)
+        return txt_html
 
     def _build_comp_intel_report(self, df_ns: pd.DataFrame) -> str:
         all_tags = df_ns[Categories.COMPET.value].explode().dropna().unique()
@@ -121,10 +133,10 @@ class Report:
         for tag in all_tags:
             df_tag = self._get_df_from_tag(df=df_ns, tag=tag)
             tag_report = self._build_tag_report(df=df_tag, summarizer=summarizer)
-            comp_intel_report += f"\u2022 {tag}: {tag_report}\n"
+            comp_intel_report += f"## {tag}\n\n{tag_report}"
         if len(comp_intel_report) == 0:
             comp_intel_report = "Nothing to see here!"
-        return "COMPETITIVE INTELLIGENCE\n" + comp_intel_report
+        return "# COMPETITIVE INTELLIGENCE\n\n" + comp_intel_report
 
     def _build_mkt_intel_report(self, df_ns: pd.DataFrame) -> str:
         # TODO: Fix it to select only the most active companies
@@ -134,8 +146,8 @@ class Report:
         for tag in all_tags:
             df_tag = self._get_df_from_tag(df=df_ns, tag=tag)
             tag_report = self._build_tag_report(df=df_tag, summarizer=summarizer)
-            market_intel_report += f"\u2022 {tag}: {tag_report}\n"
-        return "MARKET INTELLIGENCE\n" + market_intel_report
+            market_intel_report += f"## {tag}\n\n{tag_report}"
+        return "# MARKET INTELLIGENCE\n\n" + market_intel_report
 
     def _build_techthemes_report(self, df_ns: pd.DataFrame) -> str:
         # TODO: Fix it to select only the most relevant themes
@@ -148,8 +160,8 @@ class Report:
             if tag not in blacklist_tags:
                 df_tag = self._get_df_from_tag(df=df_ns, tag=tag)
                 tag_report = self._build_tag_report(df=df_tag, summarizer=summarizer)
-                techthemes_report += f"\u2022 {tag}: {tag_report}\n"
-        return "TECHNOLOGY THEMES\n" + techthemes_report
+                techthemes_report += f"## {tag}\n\n{tag_report}"
+        return "# TECHNOLOGY THEMES\n" + techthemes_report
 
     def _build_tag_report(self, df: pd.DataFrame, summarizer: Summarizer) -> str:
         if len(df) == 0:
@@ -157,17 +169,17 @@ class Report:
         else:
             sources = ""
             text = ""
-            for nb, idx in enumerate(df.index):
+            for ref_nb, idx in enumerate(df.index):
                 ns = df.loc[idx]
                 text += f"{ns['title']} : {ns['news_summary']}\n"
-                sources += f"[{nb+1}] {ns['title']} ({ns['url']})\n"
+                sources += f"{ref_nb+1}. [{ns['title']}]({ns['url']})\n"
             if len(df) == 1:
                 summary = ns["news_summary"].rstrip("\n")
             else:
                 response = summarizer.summarize(text)
                 summary = summarizer.get_content_from_response(response).rstrip("\n")
                 summary += f" (summary provided by {response['model']})"
-            sources_section = "\nSources:\n" + sources
+            sources_section = "\n\nSources:\n\n" + sources
             tag_report = summary + sources_section
         return tag_report
 

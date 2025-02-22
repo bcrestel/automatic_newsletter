@@ -68,7 +68,23 @@ class Gmail:
         messages = results.get("messages", [])
         return messages
 
-    def send_email(self, sender: str, recipient: str, subject: str, body: str) -> None:
+    def send_email(
+        self,
+        sender: str,
+        recipient: str,
+        subject: str,
+        body: str,
+        email_subtype: str = "plain",
+    ) -> None:
+        """Send an email
+
+        Args:
+            sender (str): Email address of the sender
+            recipient (str): Email address of the recipient
+            subject (str): Subject of the email
+            body (str): Text of the message
+            email_subtype (str, optional): Format of the email. Can be "plain" or "html". Defaults to "plain".
+        """
         # Create the message
         message = MIMEMultipart()
         message["to"] = recipient
@@ -76,8 +92,8 @@ class Gmail:
         message["subject"] = subject
 
         # Attach the body as text
-        msg = MIMEText(body)
-        message.attach(msg)
+        msg_body = MIMEText(body, email_subtype)
+        message.attach(msg_body)
 
         # Encode the message to base64
         raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()

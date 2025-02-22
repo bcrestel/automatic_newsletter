@@ -25,7 +25,7 @@ def runner(
         report_date_range=report_date_range,
         debug_mode=debug_mode,
     )
-    report_str = report.create_report()
+    report_html = report.create_report()
     # Email report
     gmail_api = Gmail(
         path_to_token=TOKEN_PATH,
@@ -39,5 +39,9 @@ def runner(
     )
     for recipient in recipients:
         gmail_api.send_email(
-            sender=sender, recipient=recipient, subject=subject, body=report_str
+            sender=sender,
+            recipient=recipient,
+            subject=subject,
+            body=report_html,
+            email_subtype="html",
         )
