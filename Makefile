@@ -61,7 +61,7 @@ run_crontab: build
 .PHONY : shell
 shell: build
 	$(info ***** Creating shell *****)
-	$(DOCKER_RUN) -p 8080:8080 $(DOCKER_IMAGE)
+	$(DOCKER_RUN) $(DOCKER_IMAGE)
 
 .PHONY : ipython
 ipython: build
@@ -78,6 +78,10 @@ mlflow_server: build
 	$(info ***** Starting the mlflow server *****)
 	$(DOCKER_RUN) -p 5000:5000 $(DOCKER_IMAGE) -c "mlflow server -h 0.0.0.0"
 
+.PHONY : recreate_token
+recreate_token: build
+	$(info ***** Recreating Gmail token *****)
+	$(DOCKER_RUN) -p 8080:8080 $(DOCKER_IMAGE) -c "python /home/src/utils/google.py"
 #
 # Testing
 #

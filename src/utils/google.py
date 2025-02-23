@@ -6,6 +6,7 @@ from typing import List
 
 from google_auth_oauthlib.flow import InstalledAppFlow
 
+from src.config import SCOPES
 from src.utils.date import get_date_YYYY_MM_DD
 
 logger = logging.getLogger(__name__)
@@ -31,3 +32,11 @@ def recreate_token(path_to_token: str, path_to_credentials: str, scopes: List[st
     with open(path_to_token, "w") as token:
         token.write(creds.to_json())
         logger.info(f"Wrote new token at {path_to_token}")
+
+
+if __name__ == "__main__":
+    recreate_token(
+        path_to_token="/home/secrets_vault/token.json",
+        path_to_credentials="/home/secrets_vault/credentials.json",
+        scopes=SCOPES,
+    )
