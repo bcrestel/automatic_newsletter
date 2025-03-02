@@ -20,6 +20,7 @@ SECTION_BREAKS = [
     "More from Bloomberg",
 ]
 SPLIT_PATTERN = "\n\n"
+HTML_PATTERN = r"<https://[^>]+>"
 
 
 def bloomberg_tech_parser(email: Email) -> List[NewsStory]:
@@ -49,8 +50,9 @@ def bloomberg_tech_parser(email: Email) -> List[NewsStory]:
         sections.append(_tmp[0])
         # Handle the last section
         if sec == "Must read" or sec == "Today’s must read":
-            logger.debug(f"Finishing sections with: {_tmp[1]}")
-            sections.append(_tmp[1].lstrip().split(SPLIT_PATTERN)[0])
+            appended_txt = _tmp[1].lstrip().split(SPLIT_PATTERN)[0]
+            logger.debug(f"Last section. Appended text is: {appended_txt}")
+            sections.append(appended_txt)
             break
         else:
             txt = _tmp[1]
@@ -74,12 +76,28 @@ def bloomberg_tech_parser(email: Email) -> List[NewsStory]:
     for section in sections:
         articles = section.split(SPLIT_PATTERN)
         for art in articles:
-            insert_url = True if "<>" in art else False
+            if "<>" in art or len(re.findall(HTML_PATTERN, art)) > 0:
+                insert_url = True
+            else:
+                insert_url = False
             txt = art.replace("\n", "").strip()
+            txt = re.sub(
+                HTML_PATTERN, "", txt
+            )  # remove as we've already grabbed the links before
             txt = txt.replace("<>", "")
+            logger.debug(f"art '{art}' was cleaned up into '{txt}'")
             if len(txt) > 0:
                 if ": " in txt:
-                    title, summary = txt.split(":")
+                    txtsplit_out = txt.split(":")
+                    if len(txtsplit_out) == 2:
+                        title, summary = txtsplit_out
+                    else:
+                        logger.error(
+                            f"Error in section '{section}' with article '{art} when splitting text '{txt}'"
+                        )
+                        raise ValueError(
+                            f"Was expecting 2 entries after split according to ': ', instead got {len(txtsplit_out)}: {txtsplit_out}"
+                        )
                 else:
                     logger.debug(txt)
                     title_creator = GenAIModel(
