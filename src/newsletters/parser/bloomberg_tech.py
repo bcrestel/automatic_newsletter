@@ -80,11 +80,13 @@ def bloomberg_tech_parser(email: Email) -> List[NewsStory]:
                 insert_url = True
             else:
                 insert_url = False
-            txt = art.replace("\n", "").strip()
+            txt = (" ").join(art.strip().split())
             txt = re.sub(
                 HTML_PATTERN, "", txt
             )  # remove as we've already grabbed the links before
             txt = txt.replace("<>", "")
+            if "Source: Source:" in txt:
+                txt = txt.split("Source: Source:")[0]
             logger.debug(f"art '{art}' was cleaned up into '{txt}'")
             if len(txt) > 0:
                 if ": " in txt:

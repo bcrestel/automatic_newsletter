@@ -30,7 +30,13 @@ def alpha_signal_parser(email: Email) -> List[NewsStory]:
     Returns:
         List[NewsStory]: List of NewStory objects extracted from email
     """
-    logger.info(f"Parsing email '{email['subject']}'")
+    email_subject = email["subject"]
+    if "Key takeaways" in email_subject:
+        logger.warning(
+            f"Parser not set up to process email '{email_subject}'. Skipping that email"
+        )
+        return []
+    logger.info(f"Parsing email '{email_subject}'")
     txt = email["text"]
     lines = txt.split("TOP NEWS")[1].split(SPLIT_LINES)
     news_stories = []
