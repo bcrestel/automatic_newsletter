@@ -37,6 +37,10 @@ def test_check_content():
         entry_end["title"]
         == "SAM ALTMAN SAYS ARTIFICIAL GENERAL INTELLIGENCE IS ON THE HORIZON"
     )
+    assert (
+        entry_end["url"]
+        == "https://www.nytimes.com/video/business/100000009858580/sam-altman-openai-dealbook.html"
+    )
     #
     entry_end4 = parsed_email[-4]
     assert entry_end4["title"] == "OPENAI PARTNERS WITH ANDURIL"

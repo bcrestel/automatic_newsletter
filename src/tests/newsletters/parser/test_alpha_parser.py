@@ -34,6 +34,7 @@ def test_check_content():
     #
     entry_end = parsed_email[-1]
     assert entry_end["title"] == "Automate GitHub PRs in seconds"
+    assert entry_end["url"] == "https://github.com/mckaywrigley/r1-automated-pr-example"
     #
     entry_end4 = parsed_email[-4]
     assert entry_end4["title"] == "Deploy and fine-tune DeepSeek-R1 models on AWS"
