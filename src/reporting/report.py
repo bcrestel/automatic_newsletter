@@ -13,6 +13,7 @@ from src.genai_model.summarizer import (
     SummarizerCompIntel,
     SummarizerMarketIntel,
 )
+from src.newsletters.email import Email
 from src.saving.database import Database
 from src.utils.io.text import save_to_text
 from src.utils.list import flatten_list_of_lists
@@ -46,6 +47,7 @@ class Report:
         df_scored_news_stories: Optional[pd.DataFrame] = None,
         path_to_db: Optional[str] = None,
         debug_mode: bool = True,
+        list_parser_error: List[Email] = [],
     ):
         """Build a report from scored news stories. News stories can be passed directly or queries from a Database
 
@@ -56,6 +58,7 @@ class Report:
             df_scored_news_stories (pd.DataFrame): scored news stories
             path_to_db (str): path to Database
             debug_mode (bool): debug mode will include more details. For once, we include the non-selected news stories in the report
+            list_parser_error (List[Email]): list of emails that could not be parsed
         """
         if len(report_date_range) == 2:
             self.start_date, self.end_date = report_date_range
@@ -77,6 +80,7 @@ class Report:
         if self.score_col not in self.df_ns:
             raise KeyError(f"Could not find column {self.score_col} in df_ns.")
         self.debug_mode = debug_mode
+        self._parser_error_report = self._create_parser_error_report(list_parser_error)
 
     def create_report(
         self, path_folder_log: Optional[Path] = PATH_TO_LOGS_FOLDER
@@ -97,6 +101,27 @@ class Report:
         report_html = self._convert_md_to_html(report_md)
         return report_html
 
+    def _create_parser_error_report(self, list_parser_error: List[Email]) -> str:
+        """Create sub-report of the emails that could not be parsed
+        during processing phase
+
+        Args:
+            list_parser_error (List[Email]): list of Emails that were not parsed
+
+        Returns:
+            str: sub-report in Markdown format
+        """
+        report = "# PARSER REPORT\n\n"
+        if len(list_parser_error) > 0:
+            report += (
+                f"Failed to parse the following {len(list_parser_error)} email(s):\n\n"
+            )
+            for idx, email in enumerate(list_parser_error):
+                report += f"{idx+1}. {email['sender']} -- {email['date_utc']} -- {email['subject']}\n"
+        else:
+            report += "All emails could be parsed!"
+        return report
+
     def _create_report_md(
         self, path_folder_log: Optional[Path] = PATH_TO_LOGS_FOLDER
     ) -> str:
@@ -108,7 +133,12 @@ class Report:
         techthemes_report = self._build_techthemes_report(self.df_ns)
         # format report
         report_md = (f"\n\n***\n\n").join(
-            [compintel_report, marketintel_report, techthemes_report]
+            [
+                compintel_report,
+                marketintel_report,
+                techthemes_report,
+                self._parser_error_report,
+            ]
         )
         report_md = "[TOC]" + "\n" * 4 + report_md
         # save report to disk

@@ -6,6 +6,7 @@ from src.config import CREDENTIAL_PATH, SCOPES, TOKEN_PATH
 from src.gmail import Gmail
 from src.news_story import NewsStory
 from src.newsletters.config import NEWSLETTER_AND_PARSER
+from src.newsletters.email import Email
 from src.utils.list import flatten_list_of_lists
 
 logger = logging.getLogger(__name__)
@@ -40,14 +41,24 @@ def runner(after: str, before: str) -> List[NewsStory]:
 
     # Extract the news stories from the emails
     logger.info("Parsing emails to extract news stories")
-    news_stories = [
-        NEWSLETTER_AND_PARSER[_sender](email)
-        for _sender, list_emails in emails.items()
-        for email in list_emails
-    ]
+    news_stories = []
+    parser_error: List[Email] = []
+    for _sender, list_emails in emails.items():
+        for email in list_emails:
+            try:
+                news_stories.append(NEWSLETTER_AND_PARSER[_sender](email))
+            except Exception as e:
+                logger.error(
+                    f"Could not parse email with subject '{email['subject']} from sender '{_sender}' sent on {email['date_utc']}"
+                )
+                logger.error(e)
+                parser_error.append(email)
     news_stories = flatten_list_of_lists(news_stories)
     logger.info(
         f"Newsletters block complete. Found {len(news_stories)} news stories in total."
     )
+    if len(parser_error) > 0:
+        logger.info(f"Failed to parse {len(parser_error)} email(s).")
+        logger.info([email["subject"] for email in parser_error])
 
-    return news_stories
+    return news_stories, parser_error

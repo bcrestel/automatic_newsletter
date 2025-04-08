@@ -45,7 +45,7 @@ def runner_pipeline(
         )
     if parse_news_stories:
         logger.info("Parsing newsletters for that time period")
-        list_news_stories = runner_newsletters(
+        list_news_stories, list_parser_error = runner_newsletters(
             after=report_date_range[0], before=report_date_range[1]
         )
         logger.info("Scoring all collected news stories")
@@ -64,12 +64,14 @@ def runner_pipeline(
                 df_scored_news_stories=df_scored_news_stories,
                 target_fields=target_fields,
                 report_date_range=report_date_range,
+                list_parser_error=list_parser_error,
             )
         else:
             runner_reporting(
                 path_to_db=path_to_db,
                 target_fields=target_fields,
                 report_date_range=report_date_range,
+                list_parser_error=list_parser_error,
             )
 
 

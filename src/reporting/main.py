@@ -5,6 +5,7 @@ import pandas as pd
 
 from src.config import CREDENTIAL_PATH, SCOPES, TOKEN_PATH
 from src.gmail import Gmail
+from src.newsletters.email import Email
 from src.reporting.report import Report
 from src.utils.io.text import load_from_text
 
@@ -15,6 +16,7 @@ def runner(
     df_scored_news_stories: Optional[pd.DataFrame] = None,
     path_to_db: Optional[str] = None,
     debug_mode: bool = True,
+    list_parser_error: List[Email] = [],
 ) -> None:
     # Create report
     report = Report(
@@ -24,6 +26,7 @@ def runner(
         score_col="score_category_count",
         report_date_range=report_date_range,
         debug_mode=debug_mode,
+        list_parser_error=list_parser_error,
     )
     report_html = report.create_report()
     # Email report
