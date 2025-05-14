@@ -63,7 +63,7 @@ class StructuredNewsStories:
             list_news_stories, news_stories_keys
         )
         df_news_stories["date_source"] = pd.to_datetime(
-            df_news_stories["date_source"]
+            df_news_stories["date_source"], format="%a, %d %b %Y %H:%M:%S %z"
         ).apply(lambda x: x.tz_convert("US/Eastern"))
         df_news_stories["date_source_time_zone"] = "US/Eastern"
         return df_news_stories
