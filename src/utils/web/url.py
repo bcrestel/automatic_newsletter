@@ -32,9 +32,20 @@ def expand_url(short_url: str) -> str:
     Returns:
         str: expanded url
     """
+    logger.debug(f"Expanding url: {short_url}")
     try:
-        response = requests.head(short_url, allow_redirects=True)
+        try:
+            response = requests.head(short_url, allow_redirects=True, timeout=4)
+        except requests.RequestException as e:
+            response = requests.get(
+                short_url, allow_redirects=True, stream=True, timeout=4
+            )
         expanded_url = response.url
+    except requests.Timeout as e:
+        logger.warning(
+            f"Both HEAD and GET timed out for url: {short_url}. Keeping the original url."
+        )
+        expanded_url = short_url
     except ConnectionError as e:
         logger.warning(
             f"requests.head failed for url {short_url}. Keeping the original url."
