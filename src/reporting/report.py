@@ -2,12 +2,13 @@ import logging
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import markdown
 import pandas as pd
 
 from src.config import PATH_TO_LOGS_FOLDER, VERSION
+from src.genai_model.production_editor import ProductionEditor
 from src.genai_model.summarizer import (
     Summarizer,
     SummarizerCompIntel,
@@ -162,7 +163,7 @@ class Report:
         comp_intel_report = ""
         for tag in all_tags:
             df_tag = self._get_df_from_tag(df=df_ns, tag=tag)
-            tag_report = self._build_tag_report(df=df_tag, summarizer=summarizer)
+            tag_report = self._build_tag_report(df_in=df_tag, summarizer=summarizer)
             comp_intel_report += f"## {tag}\n\n{tag_report}"
         if len(comp_intel_report) == 0:
             comp_intel_report = "Nothing to see here!"
@@ -175,7 +176,7 @@ class Report:
         market_intel_report = ""
         for tag in all_tags:
             df_tag = self._get_df_from_tag(df=df_ns, tag=tag)
-            tag_report = self._build_tag_report(df=df_tag, summarizer=summarizer)
+            tag_report = self._build_tag_report(df_in=df_tag, summarizer=summarizer)
             market_intel_report += f"## {tag}\n\n{tag_report}"
         return "# MARKET INTELLIGENCE\n\n" + market_intel_report
 
@@ -189,29 +190,46 @@ class Report:
         for tag in all_tags:
             if tag not in blacklist_tags:
                 df_tag = self._get_df_from_tag(df=df_ns, tag=tag)
-                tag_report = self._build_tag_report(df=df_tag, summarizer=summarizer)
+                tag_report = self._build_tag_report(df_in=df_tag, summarizer=summarizer)
                 techthemes_report += f"## {tag}\n\n{tag_report}"
         return "# TECHNOLOGY THEMES\n" + techthemes_report
 
-    def _build_tag_report(self, df: pd.DataFrame, summarizer: Summarizer) -> str:
-        if len(df) == 0:
+    def _build_tag_report(self, df_in: pd.DataFrame, summarizer: Summarizer) -> str:
+        if len(df_in) == 0:
             tag_report = "Nothing to see here!"
         else:
-            sources = ""
-            text = ""
-            for ref_nb, idx in enumerate(df.index):
-                ns = df.loc[idx]
-                text += f"{ns['title']} : {ns['news_summary']}\n"
-                sources += f"{ref_nb+1}. [{ns['title']}]({ns['url']})\n"
-            if len(df) == 1:
-                summary = ns["news_summary"].rstrip("\n")
-            else:
-                response = summarizer.summarize(text)
-                summary = summarizer.get_content_from_response(response).rstrip("\n")
-                summary += f" (summary provided by {response['model']})"
-            sources_section = "\n\nSources:\n\n" + sources
+            all_citations, summary, _ = self._create_citations(
+                df_in=df_in, summarizer=summarizer
+            )
+            sources_section = "\n\nSources:\n\n" + all_citations
             tag_report = summary + sources_section
         return tag_report
+
+    def _create_citations(
+        self, df_in: pd.DataFrame, summarizer: Summarizer
+    ) -> Tuple[str, str]:
+        df = df_in.copy()
+        df["nb_citation"] = 0
+        all_citations = ""
+        text = ""
+        for ref_nb, idx in enumerate(df.index):
+            ns = df.loc[idx]
+            text += f"{ns['title']} : {ns['news_summary']}\n"
+            nb_citation = ref_nb + 1
+            all_citations += f"{nb_citation}. [{ns['title']}]({ns['url']})\n"
+            df.loc[idx, "nb_citation"] = nb_citation
+        if len(df) == 1:
+            summary = ns["news_summary"].rstrip("\n")
+        else:
+            response = summarizer.summarize(text)
+            summary = summarizer.get_content_from_response(response).rstrip("\n")
+            summary += f" (summary provided by {response['model']})"
+        # Add inline citations
+        annotator = ProductionEditor()
+        summary_with_citations = annotator.add_inline_citations(
+            full_text=summary, df_cite=df
+        )
+        return all_citations, summary_with_citations, df
 
     def _build_df_ns(
         self, df_scored_news_stories: Optional[pd.DataFrame], path_to_db: Optional[str]

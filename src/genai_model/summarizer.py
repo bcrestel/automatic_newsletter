@@ -14,17 +14,17 @@ class Summarizer:
         self.summarizer = GenAIModel(model_type=model_type, system_promt=system_prompt)
         self.parameters = parameters
 
-    #    @staticmethod
-    #    def format_news_stories(bullet_list_news_stories: str) -> List[str]:
-    #        txt_split = bullet_list_news_stories.split("\u2022")
-    #        list_formatted_news_stories = []
-    #        for txt in txt_split[1:]:
-    #            txt_split2 = txt.split("Summary:")
-    #            text = txt_split2[-1]
-    #            title = txt_split2[0].split("(http")[0]
-    #            title = title.replace("\n", " ")
-    #            list_formatted_news_stories.append(f"{title}: {text}")
-    #        return list_formatted_news_stories
+    @staticmethod
+    def format_news_stories(bullet_list_news_stories: str) -> List[str]:
+        txt_split = bullet_list_news_stories.split("\u2022")
+        list_formatted_news_stories = []
+        for txt in txt_split[1:]:
+            txt_split2 = txt.split("Summary:")
+            text = txt_split2[-1]
+            title = txt_split2[0].split("(http")[0]
+            title = title.replace("\n", " ")
+            list_formatted_news_stories.append(f"{title}: {text}")
+        return list_formatted_news_stories
 
     def summarize(
         self, list_news_stories: str
